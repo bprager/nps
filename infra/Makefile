@@ -19,16 +19,16 @@ help:
 
 .PHONY: init
 init:
-	make -C infra/ init
+	$(TF) init
 
 .PHONY: plan
 plan:	## Create and display and execution plan for the infrastructure
-	make -C infra/ plan
+	$(TF) plan
 
 .PHONY: up
 up:	## Bring the infrastructure up und running and apply desired changes
-	make -C infra/ up
+	$(TF) apply
 
 .PHONY: down
 down:	## Bring the infrastructure down
-	make -C infra/ down
+	$(TF) destroy
