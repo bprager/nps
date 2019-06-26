@@ -19,16 +19,28 @@ help:
 
 .PHONY: init
 init:
-	make -C infra/ init
+	@make -C infra/ init
 
 .PHONY: plan
 plan:	## Create and display and execution plan for the infrastructure
-	make -C infra/ plan
+	@make -C infra/ plan
 
 .PHONY: up
 up:	## Bring the infrastructure up und running and apply desired changes
-	make -C infra/ up
+	@make -C infra/ up
 
 .PHONY: down
 down:	## Bring the infrastructure down
-	make -C infra/ down
+	@make -C infra/ down
+
+.PHONY: dev
+dev:	## Set the environment to "Development"
+	@make -C infra/ dev
+
+.PHONY: prod
+prod:	## Set the environment to "Production"
+	@make -C infra/ prod
+
+.PHONY: show-env
+show-env:	## Displays the currently set environment
+	@make -C infra/ show
