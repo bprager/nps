@@ -25,7 +25,7 @@ init:
 	@$(TF) workspace new $(PRODIDENTIFIER)
 
 .PHONY: plan
-plan:	## Create and display and execution plan for the infrastructure
+plan:	## Create and display the execution plan for the infrastructure
 	@$(TF) plan
 
 .PHONY: up
@@ -46,4 +46,4 @@ prod:	## Set "Production" terraform workspace
 
 .PHONY: show
 show:	## Show current terraform workspace
-	@$(TF) workspace show | awk 'BEGIN {FS = ":.*?## "}; {printf "The current environment is: \033[36m%-15s\033[0m %s\n", $$1, $$2}'
+	@printf "The current environment is: \033[36m%s\033[0m\n" $(shell $(TF) workspace show)

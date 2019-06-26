@@ -22,7 +22,7 @@ init:
 	@make -C infra/ init
 
 .PHONY: plan
-plan:	## Create and display and execution plan for the infrastructure
+plan:	## Create and display the execution plan for the infrastructure
 	@make -C infra/ plan
 
 .PHONY: up
