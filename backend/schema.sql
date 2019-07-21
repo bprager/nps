@@ -209,6 +209,41 @@ ALTER SEQUENCE public.tags_id_seq OWNED BY public.tags.id;
 
 
 --
+-- Name: user_category_idx; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.user_category_idx (
+    id integer NOT NULL,
+    "user" integer,
+    category integer
+);
+
+
+ALTER TABLE public.user_category_idx OWNER TO postgres;
+
+--
+-- Name: user_category_idx_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.user_category_idx_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.user_category_idx_id_seq OWNER TO postgres;
+
+--
+-- Name: user_category_idx_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.user_category_idx_id_seq OWNED BY public.user_category_idx.id;
+
+
+--
 -- Name: user_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
@@ -323,6 +358,13 @@ ALTER TABLE ONLY public.tags ALTER COLUMN id SET DEFAULT nextval('public.tags_id
 
 
 --
+-- Name: user_category_idx id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.user_category_idx ALTER COLUMN id SET DEFAULT nextval('public.user_category_idx_id_seq'::regclass);
+
+
+--
 -- Name: user_tag_idx id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -369,6 +411,14 @@ ALTER TABLE ONLY public.tags
 
 
 --
+-- Name: user_category_idx user_category_idx_pk; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.user_category_idx
+    ADD CONSTRAINT user_category_idx_pk PRIMARY KEY (id);
+
+
+--
 -- Name: users users_pk; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -384,6 +434,20 @@ CREATE INDEX categories_parent_idx ON public.categories USING btree (parent);
 
 
 --
+-- Name: user_tag_idx_tag_idx; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX user_tag_idx_tag_idx ON public.user_tag_idx USING btree (tag);
+
+
+--
+-- Name: user_tag_idx_user_idx; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX user_tag_idx_user_idx ON public.user_tag_idx USING btree ("user");
+
+
+--
 -- Name: categories parent_path_tgr; Type: TRIGGER; Schema: public; Owner: postgres
 --
 
@@ -396,6 +460,22 @@ CREATE TRIGGER parent_path_tgr BEFORE INSERT OR UPDATE ON public.categories FOR 
 
 ALTER TABLE ONLY public.categories
     ADD CONSTRAINT categories_fk FOREIGN KEY (parent) REFERENCES public.categories(id) ON DELETE CASCADE;
+
+
+--
+-- Name: user_category_idx user_category_category_idx_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.user_category_idx
+    ADD CONSTRAINT user_category_category_idx_fk FOREIGN KEY (category) REFERENCES public.categories(id) ON DELETE CASCADE;
+
+
+--
+-- Name: user_category_idx user_category_user_idx_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.user_category_idx
+    ADD CONSTRAINT user_category_user_idx_fk FOREIGN KEY ("user") REFERENCES public.users(id) ON DELETE CASCADE;
 
 
 --
