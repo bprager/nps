@@ -18,7 +18,7 @@ help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}'
 
 .PHONY: init
-init:
+init: ## Set up Terraform
 	@make -C infra/ init
 
 .PHONY: plan
@@ -41,6 +41,6 @@ dev:	## Set the environment to "Development"
 prod:	## Set the environment to "Production"
 	@make -C infra/ prod
 
-.PHONY: show-env
-show-env:	## Displays the currently set environment
+.PHONY: show
+show:	## Displays the currently set environment
 	@make -C infra/ show

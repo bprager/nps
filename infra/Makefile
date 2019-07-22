@@ -21,8 +21,8 @@ help:
 .PHONY: init
 init:
 	@$(TF) init
-	@$(TF) workspace new $(DEVIDENTIFIER)
 	@$(TF) workspace new $(PRODIDENTIFIER)
+	@$(TF) workspace new $(DEVIDENTIFIER)
 
 .PHONY: plan
 plan:	## Create and display the execution plan for the infrastructure
