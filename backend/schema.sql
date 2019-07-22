@@ -61,6 +61,43 @@ SET default_tablespace = '';
 SET default_with_oids = false;
 
 --
+-- Name: answers; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.answers (
+    id integer NOT NULL,
+    "user" integer NOT NULL,
+    survey integer NOT NULL,
+    score smallint,
+    body character varying
+);
+
+
+ALTER TABLE public.answers OWNER TO postgres;
+
+--
+-- Name: answer_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.answer_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.answer_id_seq OWNER TO postgres;
+
+--
+-- Name: answer_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.answer_id_seq OWNED BY public.answers.id;
+
+
+--
 -- Name: categories; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -109,7 +146,8 @@ ALTER SEQUENCE public.categories_id_seq OWNED BY public.categories.id;
 
 CREATE TABLE public.notes (
     id integer NOT NULL,
-    text text
+    text text,
+    saved timestamp with time zone NOT NULL
 );
 
 
@@ -169,6 +207,79 @@ ALTER TABLE public.orgs_id_seq OWNER TO postgres;
 --
 
 ALTER SEQUENCE public.orgs_id_seq OWNED BY public.orgs.id;
+
+
+--
+-- Name: questions; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.questions (
+    id integer NOT NULL,
+    open boolean,
+    body text NOT NULL
+);
+
+
+ALTER TABLE public.questions OWNER TO postgres;
+
+--
+-- Name: question_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.question_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.question_id_seq OWNER TO postgres;
+
+--
+-- Name: question_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.question_id_seq OWNED BY public.questions.id;
+
+
+--
+-- Name: surveys; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.surveys (
+    id integer NOT NULL,
+    start date,
+    "end" date,
+    score_question integer,
+    open_question integer,
+    note integer
+);
+
+
+ALTER TABLE public.surveys OWNER TO postgres;
+
+--
+-- Name: survey_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.survey_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.survey_id_seq OWNER TO postgres;
+
+--
+-- Name: survey_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.survey_id_seq OWNED BY public.surveys.id;
 
 
 --
@@ -258,6 +369,41 @@ CREATE SEQUENCE public.user_id_seq
 ALTER TABLE public.user_id_seq OWNER TO postgres;
 
 --
+-- Name: user_org_idx; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.user_org_idx (
+    id integer NOT NULL,
+    "user" integer,
+    org integer
+);
+
+
+ALTER TABLE public.user_org_idx OWNER TO postgres;
+
+--
+-- Name: user_org_idx_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.user_org_idx_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.user_org_idx_id_seq OWNER TO postgres;
+
+--
+-- Name: user_org_idx_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.user_org_idx_id_seq OWNED BY public.user_org_idx.id;
+
+
+--
 -- Name: user_tag_idx; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -330,6 +476,13 @@ ALTER SEQUENCE public.users_id_seq OWNED BY public.users.id;
 
 
 --
+-- Name: answers id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.answers ALTER COLUMN id SET DEFAULT nextval('public.answer_id_seq'::regclass);
+
+
+--
 -- Name: categories id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -351,6 +504,20 @@ ALTER TABLE ONLY public.orgs ALTER COLUMN id SET DEFAULT nextval('public.orgs_id
 
 
 --
+-- Name: questions id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.questions ALTER COLUMN id SET DEFAULT nextval('public.question_id_seq'::regclass);
+
+
+--
+-- Name: surveys id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.surveys ALTER COLUMN id SET DEFAULT nextval('public.survey_id_seq'::regclass);
+
+
+--
 -- Name: tags id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -365,6 +532,13 @@ ALTER TABLE ONLY public.user_category_idx ALTER COLUMN id SET DEFAULT nextval('p
 
 
 --
+-- Name: user_org_idx id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.user_org_idx ALTER COLUMN id SET DEFAULT nextval('public.user_org_idx_id_seq'::regclass);
+
+
+--
 -- Name: user_tag_idx id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -376,6 +550,14 @@ ALTER TABLE ONLY public.user_tag_idx ALTER COLUMN id SET DEFAULT nextval('public
 --
 
 ALTER TABLE ONLY public.users ALTER COLUMN id SET DEFAULT nextval('public.users_id_seq'::regclass);
+
+
+--
+-- Name: answers answer_pk; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.answers
+    ADD CONSTRAINT answer_pk PRIMARY KEY (id);
 
 
 --
@@ -403,6 +585,22 @@ ALTER TABLE ONLY public.orgs
 
 
 --
+-- Name: questions question_pk; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.questions
+    ADD CONSTRAINT question_pk PRIMARY KEY (id);
+
+
+--
+-- Name: surveys survey_pk; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.surveys
+    ADD CONSTRAINT survey_pk PRIMARY KEY (id);
+
+
+--
 -- Name: tags tags_pk; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -419,6 +617,14 @@ ALTER TABLE ONLY public.user_category_idx
 
 
 --
+-- Name: user_org_idx user_org_idx_pk; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.user_org_idx
+    ADD CONSTRAINT user_org_idx_pk PRIMARY KEY (id);
+
+
+--
 -- Name: users users_pk; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -427,10 +633,45 @@ ALTER TABLE ONLY public.users
 
 
 --
+-- Name: answer_survey_idx; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX answer_survey_idx ON public.answers USING btree (survey);
+
+
+--
+-- Name: answer_user_idx; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX answer_user_idx ON public.answers USING btree ("user");
+
+
+--
+-- Name: categories_name_idx; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX categories_name_idx ON public.categories USING btree (name);
+
+
+--
 -- Name: categories_parent_idx; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX categories_parent_idx ON public.categories USING btree (parent);
+
+
+--
+-- Name: tags_name_idx; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX tags_name_idx ON public.tags USING btree (name);
+
+
+--
+-- Name: user_org_idx_user_idx; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX user_org_idx_user_idx ON public.user_org_idx USING btree ("user");
 
 
 --
@@ -455,11 +696,51 @@ CREATE TRIGGER parent_path_tgr BEFORE INSERT OR UPDATE ON public.categories FOR 
 
 
 --
+-- Name: answers answer_survey_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.answers
+    ADD CONSTRAINT answer_survey_fk FOREIGN KEY (survey) REFERENCES public.surveys(id) ON DELETE RESTRICT;
+
+
+--
+-- Name: answers answer_user_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.answers
+    ADD CONSTRAINT answer_user_fk FOREIGN KEY ("user") REFERENCES public.users(id) ON DELETE SET NULL;
+
+
+--
 -- Name: categories categories_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.categories
     ADD CONSTRAINT categories_fk FOREIGN KEY (parent) REFERENCES public.categories(id) ON DELETE CASCADE;
+
+
+--
+-- Name: surveys survey_note_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.surveys
+    ADD CONSTRAINT survey_note_fk FOREIGN KEY (note) REFERENCES public.notes(id) ON DELETE RESTRICT;
+
+
+--
+-- Name: surveys survey_open_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.surveys
+    ADD CONSTRAINT survey_open_fk FOREIGN KEY (open_question) REFERENCES public.questions(id) ON DELETE RESTRICT;
+
+
+--
+-- Name: surveys survey_score_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.surveys
+    ADD CONSTRAINT survey_score_fk FOREIGN KEY (score_question) REFERENCES public.questions(id) ON DELETE RESTRICT;
 
 
 --
@@ -476,6 +757,22 @@ ALTER TABLE ONLY public.user_category_idx
 
 ALTER TABLE ONLY public.user_category_idx
     ADD CONSTRAINT user_category_user_idx_fk FOREIGN KEY ("user") REFERENCES public.users(id) ON DELETE CASCADE;
+
+
+--
+-- Name: user_org_idx user_org_org_idx_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.user_org_idx
+    ADD CONSTRAINT user_org_org_idx_fk FOREIGN KEY (org) REFERENCES public.orgs(id) ON DELETE CASCADE;
+
+
+--
+-- Name: user_org_idx user_org_user_idx_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.user_org_idx
+    ADD CONSTRAINT user_org_user_idx_fk FOREIGN KEY ("user") REFERENCES public.users(id) ON DELETE CASCADE;
 
 
 --
