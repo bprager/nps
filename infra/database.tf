@@ -16,4 +16,9 @@ resource "helm_release" "customerDatabase" {
     name  = "postgresqlPassword"
     value = "droWssaP"
   }
+
+  set {
+    name  = "initdbScripts"
+    value = "init.sql: |${file("../backend/schema.sql")}"
+  }
 }
