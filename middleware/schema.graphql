@@ -1,0 +1,53 @@
+scalar Date
+scalar DateTime
+
+type Org {
+  id: ID!
+  name: String
+}
+
+type Category {
+  id: ID!
+  name: String
+  parent: Category
+}
+
+type Tag {
+  id: ID!
+  name: String
+  attribute: String
+  number: Int
+  timestamp: DateTime
+}
+
+type User {
+  id: ID!
+  email: String
+  firstName: String
+  lastName: String
+  nickName: String
+  orgs: [Org!]
+  tags: [Tag!]
+  categories: [Category!]
+}
+
+type Question {
+  id: ID!
+  open: Boolean
+  body: String
+}
+
+type Note {
+  id: ID!
+  text: String
+  saved: DateTime!
+}
+
+type Survey {
+  id: ID!
+  start: Date
+  end: Date
+  scoreQuestion: Question
+  openQuestion: Question
+  note: Note
+}
