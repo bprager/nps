@@ -1,6 +1,10 @@
 scalar Date
 scalar DateTime
 
+type Query {
+  surveys: [Survey!]!
+}
+
 type Org {
   id: ID!
   name: String
@@ -26,9 +30,9 @@ type User {
   firstName: String
   lastName: String
   nickName: String
-  orgs: [Org!]
-  tags: [Tag!]
-  categories: [Category!]
+  orgs: [Org!]!
+  tags: [Tag!]!
+  categories: [Category!]!
 }
 
 type Question {
