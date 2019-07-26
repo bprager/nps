@@ -1,4 +1,5 @@
-package main
+
+package nps
 
 import (
 	"fmt"
@@ -11,7 +12,7 @@ import (
 	_ "github.com/lib/pq"
 )
 
-func main() {
+func createSchema() {
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatal("Error loading .env file")
