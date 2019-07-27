@@ -1,4 +1,3 @@
-
 package nps
 
 import (
@@ -38,11 +37,5 @@ func createSchema() {
 		_, err = sqlx.LoadFile(db, path)
 		checkErr(err)
 		log.Print("schema initialized")
-	}
-}
-
-func checkErr(err error) {
-	if err != nil {
-		panic(err)
 	}
 }
