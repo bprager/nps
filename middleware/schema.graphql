@@ -3,6 +3,10 @@ scalar DateTime
 
 type Query {
   surveys: [Survey!]!
+  users: [User!]!
+  orgs: [Org!]!
+  categories: [Category!]!
+  tags: [Tag!]!
 }
 
 type Org {

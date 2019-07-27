@@ -36,7 +36,9 @@ func init() {
 	defer db.Close()
 
 	tables := []string{}
-	db.Select(&tables, "SHOW TABLES")
+	db.Select(&tables, "SELECT tablename FROM pg_catalog.pg_tables WHERE schemaname='public';")
+	log.Printf("Number of tables found: %d", len(tables))
+	log.Printf("%v", tables)
 }
 
 func checkErr(err error) {
