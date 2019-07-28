@@ -1,11 +1,15 @@
-scalar Date
+schema {
+  query: Query
+  mutation: Mutation
+}
+
 scalar DateTime
 
 type Query {
   survey(id: ID!): Survey!
   allSurveys: [Survey!]!
   user(id: ID!): User!
-  users(tag: Tag, category: Category, org: Org)
+  users(tags: [ID!], categories: [ID!], org: ID!): [User!]!
   allUsers: [User!]!
   allOrgs: [Org!]!
   allCategories: [Category!]!
@@ -13,11 +17,27 @@ type Query {
 }
 
 type Mutation {
-  addUser(user: User!)
-  changeUser(user: User!)
-  addTag(tag: Tag!)
-  addCategory(category: Category!)
-  changeCategory(category: Category!)
+  addOrg(name: String!): Boolean!
+  addCategory(name: String!, parent: ID): Boolean!
+  addTag(
+    name: String!
+    attribute: String
+    number: Int
+    timestamp: DateTime
+  ): Boolean!
+  addUser(
+    email: String
+    firstName: String
+    lastName: String
+    nickName: String
+  ): Boolean!
+  changeUser(
+    email: String
+    firstName: String
+    lastName: String
+    nickName: String
+  ): Boolean!
+  changeCategory(name: String!, parent: ID): Boolean!
 }
 
 type Org {
@@ -64,8 +84,8 @@ type Note {
 
 type Survey {
   id: ID!
-  start: Date
-  end: Date
+  start: DateTime
+  end: DateTime
   scoreQuestion: Question
   openQuestion: Question
   note: Note
