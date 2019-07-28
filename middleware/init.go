@@ -10,7 +10,7 @@ import (
 	_ "github.com/lib/pq"
 )
 
-var db *sqlx.DB
+var DB *sqlx.DB
 
 func init() {
 	log.Print("init")
@@ -24,19 +24,13 @@ func init() {
 	dbHost := os.Getenv("PG_HOST")
 	// connect
 	dbinfo := fmt.Sprintf("host=%s user=%s password=%s sslmode=disable", dbHost, dbUser, dbPwd)
-	db, err = sqlx.Connect("postgres", dbinfo)
+	DB, err = sqlx.Connect("postgres", dbinfo)
 	checkErr(err)
-	defer db.Close()
+	defer DB.Close()
 	// check if table exist
 
-	db, err = sqlx.Open("postgres", dbinfo)
-	if err != nil {
-		log.Panic(err)
-	}
-	defer db.Close()
-
 	tables := []string{}
-	db.Select(&tables, "SELECT tablename FROM pg_catalog.pg_tables WHERE schemaname='public';")
+	DB.Select(&tables, "SELECT tablename FROM pg_catalog.pg_tables WHERE schemaname='public';")
 	log.Printf("Number of tables found: %d", len(tables))
 	log.Printf("%v", tables)
 }

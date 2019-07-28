@@ -2,11 +2,22 @@ scalar Date
 scalar DateTime
 
 type Query {
-  surveys: [Survey!]!
-  users: [User!]!
-  orgs: [Org!]!
-  categories: [Category!]!
-  tags: [Tag!]!
+  survey(id: ID!): Survey!
+  allSurveys: [Survey!]!
+  user(id: ID!): User!
+  users(tag: Tag, category: Category, org: Org)
+  allUsers: [User!]!
+  allOrgs: [Org!]!
+  allCategories: [Category!]!
+  allTags: [Tag!]!
+}
+
+type Mutation {
+  addUser(user: User!)
+  changeUser(user: User!)
+  addTag(tag: Tag!)
+  addCategory(category: Category!)
+  changeCategory(category: Category!)
 }
 
 type Org {
