@@ -2,6 +2,7 @@ package nps
 
 import (
 	"context"
+	"log"
 ) // THIS CODE IS A STARTING POINT ONLY. IT WILL NOT BE UPDATED WITH SCHEMA CHANGES.
 
 type Resolver struct{}
@@ -49,7 +50,20 @@ func (r *queryResolver) Users(ctx context.Context, tags []string, categories []s
 	panic("not implemented")
 }
 func (r *queryResolver) AllUsers(ctx context.Context) ([]*User, error) {
-	panic("not implemented")
+	rows, err := DB.Queryx("SELECT first_name, last_name, nick_name FROM user")
+	if err != nil {
+		log.Fatalln(err)
+	}
+	var users []*User
+	for rows.Next() {
+		var u *User
+		err := rows.StructScan(&u)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		users = append(users, u)
+	}
+	return users, nil
 }
 func (r *queryResolver) AllOrgs(ctx context.Context) ([]*Org, error) {
 	panic("not implemented")
