@@ -36,6 +36,7 @@ func TestShouldReturnAllUsers(t *testing.T) {
 
 	r := new(Resolver)
 	allUsers, err := r.Query().AllUsers(ctx)
-
-	t.Logf("%v", allUsers)
+	if len(allUsers) != 2 {
+		t.Errorf("Didn't get expected results, got: %d rows, want: %d.", len(allUsers), 2)
+	}
 }

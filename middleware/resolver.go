@@ -56,8 +56,8 @@ func (r *queryResolver) AllUsers(ctx context.Context) ([]*User, error) {
 	}
 	var users []*User
 	for rows.Next() {
-		var u *User
-		err := rows.StructScan(&u)
+		u := new(User)
+		err := rows.StructScan(u)
 		if err != nil {
 			log.Fatalln(err)
 		}
