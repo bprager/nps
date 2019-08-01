@@ -29,7 +29,7 @@ func TestShouldReturnAllUsers(t *testing.T) {
 
 		// This is most important part in our test. Here, literally, we are altering SQL query from
 		// MenuByNameAndLanguage function and replacing result with our expected result.
-	mock.ExpectQuery("^SELECT (.+) FROM users*").
+	mock.ExpectQuery("^SELECT (.+) FROM users.*").
 		WillReturnRows(rows)
 
 	ctx := context.TODO()

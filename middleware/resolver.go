@@ -50,7 +50,7 @@ func (r *queryResolver) Users(ctx context.Context, tags []string, categories []s
 	panic("not implemented")
 }
 func (r *queryResolver) AllUsers(ctx context.Context) ([]*User, error) {
-	rows, err := DB.Queryx("SELECT first_name, last_name, nick_name FROM user")
+	rows, err := DB.Queryx("SELECT first_name, last_name, nick_name FROM users")
 	if err != nil {
 		log.Fatalln(err)
 	}

@@ -28,7 +28,7 @@ func init() {
 	dbinfo := fmt.Sprintf("host=%s user=%s password=%s sslmode=disable", dbHost, dbUser, dbPwd)
 	DB, err = sqlx.Open("postgres", dbinfo)
 	checkErr(err)
-	defer DB.Close()
+	// defer DB.Close()
 }
 
 func checkErr(err error) {
