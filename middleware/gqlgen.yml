@@ -4,7 +4,7 @@
 # for detailed .gqlgen.yml documentation.
 
 schema:
-- schema.graphql
+  - schema.graphql
 exec:
   filename: generated.go
 model:
@@ -13,3 +13,6 @@ resolver:
   filename: resolver.go
   type: Resolver
 autobind: []
+models:
+  User:
+    model: github.com/bprager/nps.User

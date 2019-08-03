@@ -18,9 +18,7 @@ func TestShouldReturnAllUsers(t *testing.T) {
 	defer db.Close()
 
 	// Switch to mock db
-	dbOld := DB
 	DB = sqlx.NewDb(db, "sqlMock")
-	defer func() { DB = dbOld }()
 
 	// Here we are creating rows in our mocked database.
 	rows := sqlmock.NewRows([]string{"id", "first_name", "last_name", "nick_name"}).
@@ -32,10 +30,8 @@ func TestShouldReturnAllUsers(t *testing.T) {
 	mock.ExpectQuery("^SELECT (.+) FROM users.*").
 		WillReturnRows(rows)
 
-	ctx := context.TODO()
-
 	r := new(Resolver)
-	allUsers, err := r.Query().AllUsers(ctx)
+	allUsers, err := r.Query().AllUsers(context.TODO())
 	if len(allUsers) != 2 {
 		t.Errorf("Didn't get expected results, got: %d rows, want: %d.", len(allUsers), 2)
 	}
