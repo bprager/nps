@@ -14,6 +14,8 @@ type Query {
   allOrgs: [Org!]!
   allCategories: [Category!]!
   allTags: [Tag!]!
+  tag(id: ID!): Tag!
+  tags(user: ID!): [Tag!]!
 }
 
 type Mutation {

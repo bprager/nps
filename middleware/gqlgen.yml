@@ -16,3 +16,6 @@ autobind: []
 models:
   User:
     model: github.com/bprager/nps.User
+  Tag:
+    model: github.com/bprager/nps.Tag
+  

@@ -2,14 +2,17 @@ package nps
 
 import (
 	"context"
-	"log"
 ) // THIS CODE IS A STARTING POINT ONLY. IT WILL NOT BE UPDATED WITH SCHEMA CHANGES.
 
+// Resolver ...
 type Resolver struct{}
 
+// Mutation ...
 func (r *Resolver) Mutation() MutationResolver {
 	return &mutationResolver{r}
 }
+
+// Query ...
 func (r *Resolver) Query() QueryResolver {
 	return &queryResolver{r}
 }
@@ -49,28 +52,15 @@ func (r *queryResolver) User(ctx context.Context, id string) (*User, error) {
 func (r *queryResolver) Users(ctx context.Context, tags []string, categories []string, org string) ([]*User, error) {
 	panic("not implemented")
 }
-func (r *queryResolver) AllUsers(ctx context.Context) ([]*User, error) {
-	rows, err := DB.Queryx("SELECT first_name, last_name, nick_name FROM users")
-	if err != nil {
-		log.Fatalln(err)
-	}
-	var users []*User
-	for rows.Next() {
-		u := new(User)
-		err := rows.StructScan(u)
-		if err != nil {
-			log.Fatalln(err)
-		}
-		users = append(users, u)
-	}
-	return users, nil
-}
 func (r *queryResolver) AllOrgs(ctx context.Context) ([]*Org, error) {
 	panic("not implemented")
 }
 func (r *queryResolver) AllCategories(ctx context.Context) ([]*Category, error) {
 	panic("not implemented")
 }
-func (r *queryResolver) AllTags(ctx context.Context) ([]*Tag, error) {
+func (r *queryResolver) Tag(ctx context.Context, id string) (*Tag, error) {
+	panic("not implemented")
+}
+func (r *queryResolver) Tags(ctx context.Context, user string) ([]*Tag, error) {
 	panic("not implemented")
 }

@@ -33,11 +33,3 @@ type Survey struct {
 	OpenQuestion  *Question `json:"openQuestion"`
 	Note          *Note     `json:"note"`
 }
-
-type Tag struct {
-	ID        string  `json:"id"`
-	Name      *string `json:"name"`
-	Attribute *string `json:"attribute"`
-	Number    *int    `json:"number"`
-	Timestamp *string `json:"timestamp"`
-}
