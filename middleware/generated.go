@@ -36,6 +36,7 @@ type Config struct {
 type ResolverRoot interface {
 	Mutation() MutationResolver
 	Query() QueryResolver
+	Tag() TagResolver
 }
 
 type DirectiveRoot struct {
@@ -52,9 +53,9 @@ type ComplexityRoot struct {
 		AddCategory    func(childComplexity int, name string, parent *string) int
 		AddOrg         func(childComplexity int, name string) int
 		AddTag         func(childComplexity int, name string, attribute *string, number *int, timestamp *string) int
-		AddUser        func(childComplexity int, email *string, firstName *string, lastName *string, nickName *string) int
+		AddUser        func(childComplexity int, email string, firstName *string, lastName *string, nickName *string) int
 		ChangeCategory func(childComplexity int, name string, parent *string) int
-		ChangeUser     func(childComplexity int, email *string, firstName *string, lastName *string, nickName *string) int
+		ChangeUser     func(childComplexity int, email string, firstName *string, lastName *string, nickName *string) int
 	}
 
 	Note struct {
@@ -120,8 +121,8 @@ type MutationResolver interface {
 	AddOrg(ctx context.Context, name string) (bool, error)
 	AddCategory(ctx context.Context, name string, parent *string) (bool, error)
 	AddTag(ctx context.Context, name string, attribute *string, number *int, timestamp *string) (bool, error)
-	AddUser(ctx context.Context, email *string, firstName *string, lastName *string, nickName *string) (bool, error)
-	ChangeUser(ctx context.Context, email *string, firstName *string, lastName *string, nickName *string) (bool, error)
+	AddUser(ctx context.Context, email string, firstName *string, lastName *string, nickName *string) (bool, error)
+	ChangeUser(ctx context.Context, email string, firstName *string, lastName *string, nickName *string) (bool, error)
 	ChangeCategory(ctx context.Context, name string, parent *string) (bool, error)
 }
 type QueryResolver interface {
@@ -135,6 +136,11 @@ type QueryResolver interface {
 	AllTags(ctx context.Context) ([]*Tag, error)
 	Tag(ctx context.Context, id string) (*Tag, error)
 	Tags(ctx context.Context, user string) ([]*Tag, error)
+}
+type TagResolver interface {
+	Attribute(ctx context.Context, obj *Tag) (*string, error)
+	Number(ctx context.Context, obj *Tag) (*int, error)
+	Timestamp(ctx context.Context, obj *Tag) (*string, error)
 }
 
 type executableSchema struct {
@@ -219,7 +225,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.AddUser(childComplexity, args["email"].(*string), args["firstName"].(*string), args["lastName"].(*string), args["nickName"].(*string)), true
+		return e.complexity.Mutation.AddUser(childComplexity, args["email"].(string), args["firstName"].(*string), args["lastName"].(*string), args["nickName"].(*string)), true
 
 	case "Mutation.changeCategory":
 		if e.complexity.Mutation.ChangeCategory == nil {
@@ -243,7 +249,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.ChangeUser(childComplexity, args["email"].(*string), args["firstName"].(*string), args["lastName"].(*string), args["nickName"].(*string)), true
+		return e.complexity.Mutation.ChangeUser(childComplexity, args["email"].(string), args["firstName"].(*string), args["lastName"].(*string), args["nickName"].(*string)), true
 
 	case "Note.id":
 		if e.complexity.Note.ID == nil {
@@ -621,13 +627,13 @@ type Mutation {
     timestamp: DateTime
   ): Boolean!
   addUser(
-    email: String
+    email: String!
     firstName: String
     lastName: String
     nickName: String
   ): Boolean!
   changeUser(
-    email: String
+    email: String!
     firstName: String
     lastName: String
     nickName: String
@@ -637,18 +643,18 @@ type Mutation {
 
 type Org {
   id: ID!
-  name: String
+  name: String!
 }
 
 type Category {
   id: ID!
-  name: String
+  name: String!
   parent: Category
 }
 
 type Tag {
   id: ID!
-  name: String
+  name: String!
   attribute: String
   number: Int
   timestamp: DateTime
@@ -656,7 +662,7 @@ type Tag {
 
 type User {
   id: ID!
-  email: String
+  email: String!
   firstName: String
   lastName: String
   nickName: String
@@ -667,13 +673,13 @@ type User {
 
 type Question {
   id: ID!
-  open: Boolean
-  body: String
+  open: Boolean!
+  body: String!
 }
 
 type Note {
   id: ID!
-  text: String
+  text: String!
   saved: DateTime!
 }
 
@@ -681,7 +687,7 @@ type Survey {
   id: ID!
   start: DateTime
   end: DateTime
-  scoreQuestion: Question
+  scoreQuestion: Question!
   openQuestion: Question
   note: Note
 }
@@ -769,9 +775,9 @@ func (ec *executionContext) field_Mutation_addTag_args(ctx context.Context, rawA
 func (ec *executionContext) field_Mutation_addUser_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 *string
+	var arg0 string
 	if tmp, ok := rawArgs["email"]; ok {
-		arg0, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -829,9 +835,9 @@ func (ec *executionContext) field_Mutation_changeCategory_args(ctx context.Conte
 func (ec *executionContext) field_Mutation_changeUser_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 *string
+	var arg0 string
 	if tmp, ok := rawArgs["email"]; ok {
-		arg0, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1063,12 +1069,15 @@ func (ec *executionContext) _Category_name(ctx context.Context, field graphql.Co
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(string)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Category_parent(ctx context.Context, field graphql.CollectedField, obj *Category) (ret graphql.Marshaler) {
@@ -1263,7 +1272,7 @@ func (ec *executionContext) _Mutation_addUser(ctx context.Context, field graphql
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().AddUser(rctx, args["email"].(*string), args["firstName"].(*string), args["lastName"].(*string), args["nickName"].(*string))
+		return ec.resolvers.Mutation().AddUser(rctx, args["email"].(string), args["firstName"].(*string), args["lastName"].(*string), args["nickName"].(*string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1307,7 +1316,7 @@ func (ec *executionContext) _Mutation_changeUser(ctx context.Context, field grap
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().ChangeUser(rctx, args["email"].(*string), args["firstName"].(*string), args["lastName"].(*string), args["nickName"].(*string))
+		return ec.resolvers.Mutation().ChangeUser(rctx, args["email"].(string), args["firstName"].(*string), args["lastName"].(*string), args["nickName"].(*string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1432,12 +1441,15 @@ func (ec *executionContext) _Note_text(ctx context.Context, field graphql.Collec
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(string)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Note_saved(ctx context.Context, field graphql.CollectedField, obj *Note) (ret graphql.Marshaler) {
@@ -1540,12 +1552,15 @@ func (ec *executionContext) _Org_name(ctx context.Context, field graphql.Collect
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(string)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_survey(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -2091,12 +2106,15 @@ func (ec *executionContext) _Question_open(ctx context.Context, field graphql.Co
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.(*bool)
+	res := resTmp.(bool)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Question_body(ctx context.Context, field graphql.CollectedField, obj *Question) (ret graphql.Marshaler) {
@@ -2125,12 +2143,15 @@ func (ec *executionContext) _Question_body(ctx context.Context, field graphql.Co
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(string)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Survey_id(ctx context.Context, field graphql.CollectedField, obj *Survey) (ret graphql.Marshaler) {
@@ -2264,12 +2285,15 @@ func (ec *executionContext) _Survey_scoreQuestion(ctx context.Context, field gra
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
 	res := resTmp.(*Question)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOQuestion2ᚖgithubᚗcomᚋbpragerᚋnpsᚐQuestion(ctx, field.Selections, res)
+	return ec.marshalNQuestion2ᚖgithubᚗcomᚋbpragerᚋnpsᚐQuestion(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Survey_openQuestion(ctx context.Context, field graphql.CollectedField, obj *Survey) (ret graphql.Marshaler) {
@@ -2403,12 +2427,15 @@ func (ec *executionContext) _Tag_name(ctx context.Context, field graphql.Collect
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(string)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Tag_attribute(ctx context.Context, field graphql.CollectedField, obj *Tag) (ret graphql.Marshaler) {
@@ -2424,13 +2451,13 @@ func (ec *executionContext) _Tag_attribute(ctx context.Context, field graphql.Co
 		Object:   "Tag",
 		Field:    field,
 		Args:     nil,
-		IsMethod: false,
+		IsMethod: true,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Attribute, nil
+		return ec.resolvers.Tag().Attribute(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2458,13 +2485,13 @@ func (ec *executionContext) _Tag_number(ctx context.Context, field graphql.Colle
 		Object:   "Tag",
 		Field:    field,
 		Args:     nil,
-		IsMethod: false,
+		IsMethod: true,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Number, nil
+		return ec.resolvers.Tag().Number(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2492,13 +2519,13 @@ func (ec *executionContext) _Tag_timestamp(ctx context.Context, field graphql.Co
 		Object:   "Tag",
 		Field:    field,
 		Args:     nil,
-		IsMethod: false,
+		IsMethod: true,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Timestamp, nil
+		return ec.resolvers.Tag().Timestamp(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2576,12 +2603,15 @@ func (ec *executionContext) _User_email(ctx context.Context, field graphql.Colle
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
 	res := resTmp.(*string)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalNString2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _User_firstName(ctx context.Context, field graphql.CollectedField, obj *User) (ret graphql.Marshaler) {
@@ -3974,6 +4004,9 @@ func (ec *executionContext) _Category(ctx context.Context, sel ast.SelectionSet,
 			}
 		case "name":
 			out.Values[i] = ec._Category_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "parent":
 			out.Values[i] = ec._Category_parent(ctx, field, obj)
 		default:
@@ -4061,6 +4094,9 @@ func (ec *executionContext) _Note(ctx context.Context, sel ast.SelectionSet, obj
 			}
 		case "text":
 			out.Values[i] = ec._Note_text(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "saved":
 			out.Values[i] = ec._Note_saved(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -4095,6 +4131,9 @@ func (ec *executionContext) _Org(ctx context.Context, sel ast.SelectionSet, obj 
 			}
 		case "name":
 			out.Values[i] = ec._Org_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -4294,8 +4333,14 @@ func (ec *executionContext) _Question(ctx context.Context, sel ast.SelectionSet,
 			}
 		case "open":
 			out.Values[i] = ec._Question_open(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "body":
 			out.Values[i] = ec._Question_body(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -4329,6 +4374,9 @@ func (ec *executionContext) _Survey(ctx context.Context, sel ast.SelectionSet, o
 			out.Values[i] = ec._Survey_end(ctx, field, obj)
 		case "scoreQuestion":
 			out.Values[i] = ec._Survey_scoreQuestion(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "openQuestion":
 			out.Values[i] = ec._Survey_openQuestion(ctx, field, obj)
 		case "note":
@@ -4358,16 +4406,46 @@ func (ec *executionContext) _Tag(ctx context.Context, sel ast.SelectionSet, obj 
 		case "id":
 			out.Values[i] = ec._Tag_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "name":
 			out.Values[i] = ec._Tag_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		case "attribute":
-			out.Values[i] = ec._Tag_attribute(ctx, field, obj)
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Tag_attribute(ctx, field, obj)
+				return res
+			})
 		case "number":
-			out.Values[i] = ec._Tag_number(ctx, field, obj)
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Tag_number(ctx, field, obj)
+				return res
+			})
 		case "timestamp":
-			out.Values[i] = ec._Tag_timestamp(ctx, field, obj)
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Tag_timestamp(ctx, field, obj)
+				return res
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -4397,6 +4475,9 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 			}
 		case "email":
 			out.Values[i] = ec._User_email(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "firstName":
 			out.Values[i] = ec._User_firstName(ctx, field, obj)
 		case "lastName":
@@ -4832,6 +4913,20 @@ func (ec *executionContext) marshalNOrg2ᚖgithubᚗcomᚋbpragerᚋnpsᚐOrg(ct
 	return ec._Org(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalNQuestion2githubᚗcomᚋbpragerᚋnpsᚐQuestion(ctx context.Context, sel ast.SelectionSet, v Question) graphql.Marshaler {
+	return ec._Question(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNQuestion2ᚖgithubᚗcomᚋbpragerᚋnpsᚐQuestion(ctx context.Context, sel ast.SelectionSet, v *Question) graphql.Marshaler {
+	if v == nil {
+		if !ec.HasError(graphql.GetResolverContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._Question(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v interface{}) (string, error) {
 	return graphql.UnmarshalString(v)
 }
@@ -4844,6 +4939,24 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) unmarshalNString2ᚖstring(ctx context.Context, v interface{}) (*string, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalNString2string(ctx, v)
+	return &res, err
+}
+
+func (ec *executionContext) marshalNString2ᚖstring(ctx context.Context, sel ast.SelectionSet, v *string) graphql.Marshaler {
+	if v == nil {
+		if !ec.HasError(graphql.GetResolverContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec.marshalNString2string(ctx, sel, *v)
 }
 
 func (ec *executionContext) marshalNSurvey2githubᚗcomᚋbpragerᚋnpsᚐSurvey(ctx context.Context, sel ast.SelectionSet, v Survey) graphql.Marshaler {

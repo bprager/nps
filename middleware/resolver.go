@@ -3,7 +3,6 @@ package nps
 import (
 	"context"
 ) // THIS CODE IS A STARTING POINT ONLY. IT WILL NOT BE UPDATED WITH SCHEMA CHANGES.
-
 // Resolver ...
 type Resolver struct{}
 
@@ -17,6 +16,11 @@ func (r *Resolver) Query() QueryResolver {
 	return &queryResolver{r}
 }
 
+// Tag ...
+func (r *Resolver) Tag() TagResolver {
+	return &tagResolver{r}
+}
+
 type mutationResolver struct{ *Resolver }
 
 func (r *mutationResolver) AddOrg(ctx context.Context, name string) (bool, error) {
@@ -25,13 +29,10 @@ func (r *mutationResolver) AddOrg(ctx context.Context, name string) (bool, error
 func (r *mutationResolver) AddCategory(ctx context.Context, name string, parent *string) (bool, error) {
 	panic("not implemented")
 }
-func (r *mutationResolver) AddTag(ctx context.Context, name string, attribute *string, number *int, timestamp *string) (bool, error) {
+func (r *mutationResolver) AddUser(ctx context.Context, email string, firstName *string, lastName *string, nickName *string) (bool, error) {
 	panic("not implemented")
 }
-func (r *mutationResolver) AddUser(ctx context.Context, email *string, firstName *string, lastName *string, nickName *string) (bool, error) {
-	panic("not implemented")
-}
-func (r *mutationResolver) ChangeUser(ctx context.Context, email *string, firstName *string, lastName *string, nickName *string) (bool, error) {
+func (r *mutationResolver) ChangeUser(ctx context.Context, email string, firstName *string, lastName *string, nickName *string) (bool, error) {
 	panic("not implemented")
 }
 func (r *mutationResolver) ChangeCategory(ctx context.Context, name string, parent *string) (bool, error) {
@@ -62,5 +63,17 @@ func (r *queryResolver) Tag(ctx context.Context, id string) (*Tag, error) {
 	panic("not implemented")
 }
 func (r *queryResolver) Tags(ctx context.Context, user string) ([]*Tag, error) {
+	panic("not implemented")
+}
+
+type tagResolver struct{ *Resolver }
+
+func (r *tagResolver) Attribute(ctx context.Context, obj *Tag) (*string, error) {
+	panic("not implemented")
+}
+func (r *tagResolver) Number(ctx context.Context, obj *Tag) (*int, error) {
+	panic("not implemented")
+}
+func (r *tagResolver) Timestamp(ctx context.Context, obj *Tag) (*string, error) {
 	panic("not implemented")
 }

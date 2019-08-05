@@ -28,13 +28,13 @@ type Mutation {
     timestamp: DateTime
   ): Boolean!
   addUser(
-    email: String
+    email: String!
     firstName: String
     lastName: String
     nickName: String
   ): Boolean!
   changeUser(
-    email: String
+    email: String!
     firstName: String
     lastName: String
     nickName: String
@@ -44,18 +44,18 @@ type Mutation {
 
 type Org {
   id: ID!
-  name: String
+  name: String!
 }
 
 type Category {
   id: ID!
-  name: String
+  name: String!
   parent: Category
 }
 
 type Tag {
   id: ID!
-  name: String
+  name: String!
   attribute: String
   number: Int
   timestamp: DateTime
@@ -63,7 +63,7 @@ type Tag {
 
 type User {
   id: ID!
-  email: String
+  email: String!
   firstName: String
   lastName: String
   nickName: String
@@ -74,13 +74,13 @@ type User {
 
 type Question {
   id: ID!
-  open: Boolean
-  body: String
+  open: Boolean!
+  body: String!
 }
 
 type Note {
   id: ID!
-  text: String
+  text: String!
   saved: DateTime!
 }
 
@@ -88,7 +88,7 @@ type Survey {
   id: ID!
   start: DateTime
   end: DateTime
-  scoreQuestion: Question
+  scoreQuestion: Question!
   openQuestion: Question
   note: Note
 }

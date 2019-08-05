@@ -4,25 +4,25 @@ package nps
 
 type Category struct {
 	ID     string    `json:"id"`
-	Name   *string   `json:"name"`
+	Name   string    `json:"name"`
 	Parent *Category `json:"parent"`
 }
 
 type Note struct {
-	ID    string  `json:"id"`
-	Text  *string `json:"text"`
-	Saved string  `json:"saved"`
+	ID    string `json:"id"`
+	Text  string `json:"text"`
+	Saved string `json:"saved"`
 }
 
 type Org struct {
-	ID   string  `json:"id"`
-	Name *string `json:"name"`
+	ID   string `json:"id"`
+	Name string `json:"name"`
 }
 
 type Question struct {
-	ID   string  `json:"id"`
-	Open *bool   `json:"open"`
-	Body *string `json:"body"`
+	ID   string `json:"id"`
+	Open bool   `json:"open"`
+	Body string `json:"body"`
 }
 
 type Survey struct {

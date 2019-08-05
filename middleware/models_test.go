@@ -3,6 +3,7 @@ package nps
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/jmoiron/sqlx"
@@ -64,4 +65,32 @@ func TestShouldReturnAllUsers(t *testing.T) {
 	if len(allUsers) != 2 {
 		t.Errorf("Didn't get expected results, got: %d rows, want: %d.", len(allUsers), 2)
 	}
+}
+
+func TestAddTag(t *testing.T) {
+	// Creates sqlmock database connection and a mock to manage expectations.
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	// Closes the database and prevents new queries from starting.
+	defer db.Close()
+
+	// Switch to mock db
+	DB = sqlx.NewDb(db, "sqlMock")
+
+	mock.ExpectExec("INSERT INTO tags").
+		WillReturnResult(sqlmock.NewResult(1, 1))
+
+	r := new(Resolver)
+
+	attribute := "attribute"
+	number := 123
+	timestamp := time.Now().String()
+
+	result, err := r.Mutation().AddTag(context.TODO(), "name", &attribute, &number, &timestamp)
+	if !result {
+		t.Errorf("Didn't get expected results, got: %t , want: %t.", result, true)
+	}
+
 }
