@@ -5,17 +5,48 @@ schema {
 
 scalar DateTime
 
+type SurveysResult {
+  totalCount: Int!
+  surveys: [Survey]!
+}
+
+type UsersResult {
+  totalCount: Int!
+  users: [User!]!
+}
+
+type OrgsResult {
+  totalCount: Int!
+  orgs: [Org!]!
+}
+
+type CategoriesResult {
+  totalCount: Int!
+  categories: [Category!]!
+}
+
+type TagsResult {
+  totalCount: Int!
+  tags: [Tag!]!
+}
+
 type Query {
   survey(id: ID!): Survey!
-  allSurveys: [Survey!]!
+  allSurveys(limit: Int, offset: Int): SurveysResult!
   user(id: ID!): User!
-  users(tags: [ID!], categories: [ID!], org: ID!): [User!]!
-  allUsers: [User!]!
-  allOrgs: [Org!]!
-  allCategories: [Category!]!
-  allTags: [Tag!]!
+  users(
+    tags: [ID!]
+    categories: [ID!]
+    org: ID
+    limit: Int
+    offset: Int
+  ): UsersResult!
+  allUsers(limit: Int, offset: Int): UsersResult!
+  allOrgs(limit: Int, offset: Int): OrgsResult!
+  allCategories(limit: Int, offset: Int): CategoriesResult!
   tag(id: ID!): Tag!
-  tags(user: ID!): [Tag!]!
+  tags(user: ID!): TagsResult!
+  allTags(limit: Int, offset: Int): TagsResult!
 }
 
 type Mutation {
