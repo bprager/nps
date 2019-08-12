@@ -43,6 +43,11 @@ type DirectiveRoot struct {
 }
 
 type ComplexityRoot struct {
+	CategoriesResult struct {
+		Categories func(childComplexity int) int
+		TotalCount func(childComplexity int) int
+	}
+
 	Category struct {
 		ID     func(childComplexity int) int
 		Name   func(childComplexity int) int
@@ -69,17 +74,22 @@ type ComplexityRoot struct {
 		Name func(childComplexity int) int
 	}
 
+	OrgsResult struct {
+		Orgs       func(childComplexity int) int
+		TotalCount func(childComplexity int) int
+	}
+
 	Query struct {
-		AllCategories func(childComplexity int) int
-		AllOrgs       func(childComplexity int) int
-		AllSurveys    func(childComplexity int) int
-		AllTags       func(childComplexity int) int
-		AllUsers      func(childComplexity int) int
+		AllCategories func(childComplexity int, limit int, offset int) int
+		AllOrgs       func(childComplexity int, limit int, offset int) int
+		AllSurveys    func(childComplexity int, limit int, offset int) int
+		AllTags       func(childComplexity int, limit int, offset int) int
+		AllUsers      func(childComplexity int, limit int, offset int) int
 		Survey        func(childComplexity int, id string) int
 		Tag           func(childComplexity int, id string) int
 		Tags          func(childComplexity int, user string) int
 		User          func(childComplexity int, id string) int
-		Users         func(childComplexity int, tags []string, categories []string, org string) int
+		Users         func(childComplexity int, tags []string, categories []string, org *string, limit int, offset int) int
 	}
 
 	Question struct {
@@ -97,12 +107,22 @@ type ComplexityRoot struct {
 		Start         func(childComplexity int) int
 	}
 
+	SurveysResult struct {
+		Surveys    func(childComplexity int) int
+		TotalCount func(childComplexity int) int
+	}
+
 	Tag struct {
 		Attribute func(childComplexity int) int
 		ID        func(childComplexity int) int
 		Name      func(childComplexity int) int
 		Number    func(childComplexity int) int
 		Timestamp func(childComplexity int) int
+	}
+
+	TagsResult struct {
+		Tags       func(childComplexity int) int
+		TotalCount func(childComplexity int) int
 	}
 
 	User struct {
@@ -114,6 +134,11 @@ type ComplexityRoot struct {
 		NickName   func(childComplexity int) int
 		Orgs       func(childComplexity int) int
 		Tags       func(childComplexity int) int
+	}
+
+	UsersResult struct {
+		TotalCount func(childComplexity int) int
+		Users      func(childComplexity int) int
 	}
 }
 
@@ -127,15 +152,15 @@ type MutationResolver interface {
 }
 type QueryResolver interface {
 	Survey(ctx context.Context, id string) (*Survey, error)
-	AllSurveys(ctx context.Context) ([]*Survey, error)
+	AllSurveys(ctx context.Context, limit int, offset int) (*SurveysResult, error)
 	User(ctx context.Context, id string) (*User, error)
-	Users(ctx context.Context, tags []string, categories []string, org string) ([]*User, error)
-	AllUsers(ctx context.Context) ([]*User, error)
-	AllOrgs(ctx context.Context) ([]*Org, error)
-	AllCategories(ctx context.Context) ([]*Category, error)
-	AllTags(ctx context.Context) ([]*Tag, error)
+	Users(ctx context.Context, tags []string, categories []string, org *string, limit int, offset int) (*UsersResult, error)
+	AllUsers(ctx context.Context, limit int, offset int) (*UsersResult, error)
+	AllOrgs(ctx context.Context, limit int, offset int) (*OrgsResult, error)
+	AllCategories(ctx context.Context, limit int, offset int) (*CategoriesResult, error)
 	Tag(ctx context.Context, id string) (*Tag, error)
-	Tags(ctx context.Context, user string) ([]*Tag, error)
+	Tags(ctx context.Context, user string) (*TagsResult, error)
+	AllTags(ctx context.Context, limit int, offset int) (*TagsResult, error)
 }
 type TagResolver interface {
 	Attribute(ctx context.Context, obj *Tag) (*string, error)
@@ -157,6 +182,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	ec := executionContext{nil, e}
 	_ = ec
 	switch typeName + "." + field {
+
+	case "CategoriesResult.categories":
+		if e.complexity.CategoriesResult.Categories == nil {
+			break
+		}
+
+		return e.complexity.CategoriesResult.Categories(childComplexity), true
+
+	case "CategoriesResult.totalCount":
+		if e.complexity.CategoriesResult.TotalCount == nil {
+			break
+		}
+
+		return e.complexity.CategoriesResult.TotalCount(childComplexity), true
 
 	case "Category.id":
 		if e.complexity.Category.ID == nil {
@@ -286,40 +325,79 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Org.Name(childComplexity), true
 
+	case "OrgsResult.orgs":
+		if e.complexity.OrgsResult.Orgs == nil {
+			break
+		}
+
+		return e.complexity.OrgsResult.Orgs(childComplexity), true
+
+	case "OrgsResult.totalCount":
+		if e.complexity.OrgsResult.TotalCount == nil {
+			break
+		}
+
+		return e.complexity.OrgsResult.TotalCount(childComplexity), true
+
 	case "Query.allCategories":
 		if e.complexity.Query.AllCategories == nil {
 			break
 		}
 
-		return e.complexity.Query.AllCategories(childComplexity), true
+		args, err := ec.field_Query_allCategories_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.AllCategories(childComplexity, args["limit"].(int), args["offset"].(int)), true
 
 	case "Query.allOrgs":
 		if e.complexity.Query.AllOrgs == nil {
 			break
 		}
 
-		return e.complexity.Query.AllOrgs(childComplexity), true
+		args, err := ec.field_Query_allOrgs_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.AllOrgs(childComplexity, args["limit"].(int), args["offset"].(int)), true
 
 	case "Query.allSurveys":
 		if e.complexity.Query.AllSurveys == nil {
 			break
 		}
 
-		return e.complexity.Query.AllSurveys(childComplexity), true
+		args, err := ec.field_Query_allSurveys_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.AllSurveys(childComplexity, args["limit"].(int), args["offset"].(int)), true
 
 	case "Query.allTags":
 		if e.complexity.Query.AllTags == nil {
 			break
 		}
 
-		return e.complexity.Query.AllTags(childComplexity), true
+		args, err := ec.field_Query_allTags_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.AllTags(childComplexity, args["limit"].(int), args["offset"].(int)), true
 
 	case "Query.allUsers":
 		if e.complexity.Query.AllUsers == nil {
 			break
 		}
 
-		return e.complexity.Query.AllUsers(childComplexity), true
+		args, err := ec.field_Query_allUsers_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.AllUsers(childComplexity, args["limit"].(int), args["offset"].(int)), true
 
 	case "Query.survey":
 		if e.complexity.Query.Survey == nil {
@@ -379,7 +457,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.Users(childComplexity, args["tags"].([]string), args["categories"].([]string), args["org"].(string)), true
+		return e.complexity.Query.Users(childComplexity, args["tags"].([]string), args["categories"].([]string), args["org"].(*string), args["limit"].(int), args["offset"].(int)), true
 
 	case "Question.body":
 		if e.complexity.Question.Body == nil {
@@ -444,6 +522,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Survey.Start(childComplexity), true
 
+	case "SurveysResult.surveys":
+		if e.complexity.SurveysResult.Surveys == nil {
+			break
+		}
+
+		return e.complexity.SurveysResult.Surveys(childComplexity), true
+
+	case "SurveysResult.totalCount":
+		if e.complexity.SurveysResult.TotalCount == nil {
+			break
+		}
+
+		return e.complexity.SurveysResult.TotalCount(childComplexity), true
+
 	case "Tag.attribute":
 		if e.complexity.Tag.Attribute == nil {
 			break
@@ -478,6 +570,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Tag.Timestamp(childComplexity), true
+
+	case "TagsResult.tags":
+		if e.complexity.TagsResult.Tags == nil {
+			break
+		}
+
+		return e.complexity.TagsResult.Tags(childComplexity), true
+
+	case "TagsResult.totalCount":
+		if e.complexity.TagsResult.TotalCount == nil {
+			break
+		}
+
+		return e.complexity.TagsResult.TotalCount(childComplexity), true
 
 	case "User.categories":
 		if e.complexity.User.Categories == nil {
@@ -534,6 +640,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.User.Tags(childComplexity), true
+
+	case "UsersResult.totalCount":
+		if e.complexity.UsersResult.TotalCount == nil {
+			break
+		}
+
+		return e.complexity.UsersResult.TotalCount(childComplexity), true
+
+	case "UsersResult.users":
+		if e.complexity.UsersResult.Users == nil {
+			break
+		}
+
+		return e.complexity.UsersResult.Users(childComplexity), true
 
 	}
 	return 0, false
@@ -604,17 +724,48 @@ var parsedSchema = gqlparser.MustLoadSchema(
 
 scalar DateTime
 
+type SurveysResult {
+  totalCount: Int!
+  surveys: [Survey]!
+}
+
+type UsersResult {
+  totalCount: Int!
+  users: [User!]!
+}
+
+type OrgsResult {
+  totalCount: Int!
+  orgs: [Org!]!
+}
+
+type CategoriesResult {
+  totalCount: Int!
+  categories: [Category!]!
+}
+
+type TagsResult {
+  totalCount: Int!
+  tags: [Tag!]!
+}
+
 type Query {
   survey(id: ID!): Survey!
-  allSurveys: [Survey!]!
+  allSurveys(limit: Int!, offset: Int!): SurveysResult!
   user(id: ID!): User!
-  users(tags: [ID!], categories: [ID!], org: ID!): [User!]!
-  allUsers: [User!]!
-  allOrgs: [Org!]!
-  allCategories: [Category!]!
-  allTags: [Tag!]!
+  users(
+    tags: [ID!]
+    categories: [ID!]
+    org: ID
+    limit: Int!
+    offset: Int!
+  ): UsersResult!
+  allUsers(limit: Int!, offset: Int!): UsersResult!
+  allOrgs(limit: Int!, offset: Int!): OrgsResult!
+  allCategories(limit: Int!, offset: Int!): CategoriesResult!
   tag(id: ID!): Tag!
-  tags(user: ID!): [Tag!]!
+  tags(user: ID!): TagsResult!
+  allTags(limit: Int!, offset: Int!): TagsResult!
 }
 
 type Mutation {
@@ -884,6 +1035,116 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 	return args, nil
 }
 
+func (ec *executionContext) field_Query_allCategories_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["limit"]; ok {
+		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["limit"] = arg0
+	var arg1 int
+	if tmp, ok := rawArgs["offset"]; ok {
+		arg1, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["offset"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_allOrgs_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["limit"]; ok {
+		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["limit"] = arg0
+	var arg1 int
+	if tmp, ok := rawArgs["offset"]; ok {
+		arg1, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["offset"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_allSurveys_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["limit"]; ok {
+		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["limit"] = arg0
+	var arg1 int
+	if tmp, ok := rawArgs["offset"]; ok {
+		arg1, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["offset"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_allTags_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["limit"]; ok {
+		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["limit"] = arg0
+	var arg1 int
+	if tmp, ok := rawArgs["offset"]; ok {
+		arg1, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["offset"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_allUsers_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["limit"]; ok {
+		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["limit"] = arg0
+	var arg1 int
+	if tmp, ok := rawArgs["offset"]; ok {
+		arg1, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["offset"] = arg1
+	return args, nil
+}
+
 func (ec *executionContext) field_Query_survey_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -959,14 +1220,30 @@ func (ec *executionContext) field_Query_users_args(ctx context.Context, rawArgs 
 		}
 	}
 	args["categories"] = arg1
-	var arg2 string
+	var arg2 *string
 	if tmp, ok := rawArgs["org"]; ok {
-		arg2, err = ec.unmarshalNID2string(ctx, tmp)
+		arg2, err = ec.unmarshalOID2ᚖstring(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
 	args["org"] = arg2
+	var arg3 int
+	if tmp, ok := rawArgs["limit"]; ok {
+		arg3, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["limit"] = arg3
+	var arg4 int
+	if tmp, ok := rawArgs["offset"]; ok {
+		arg4, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["offset"] = arg4
 	return args, nil
 }
 
@@ -1005,6 +1282,80 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 // endregion ************************** directives.gotpl **************************
 
 // region    **************************** field.gotpl *****************************
+
+func (ec *executionContext) _CategoriesResult_totalCount(ctx context.Context, field graphql.CollectedField, obj *CategoriesResult) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "CategoriesResult",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TotalCount, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CategoriesResult_categories(ctx context.Context, field graphql.CollectedField, obj *CategoriesResult) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "CategoriesResult",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Categories, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*Category)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNCategory2ᚕᚖgithubᚗcomᚋbpragerᚋnpsᚐCategory(ctx, field.Selections, res)
+}
 
 func (ec *executionContext) _Category_id(ctx context.Context, field graphql.CollectedField, obj *Category) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
@@ -1563,6 +1914,80 @@ func (ec *executionContext) _Org_name(ctx context.Context, field graphql.Collect
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _OrgsResult_totalCount(ctx context.Context, field graphql.CollectedField, obj *OrgsResult) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "OrgsResult",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TotalCount, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _OrgsResult_orgs(ctx context.Context, field graphql.CollectedField, obj *OrgsResult) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "OrgsResult",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Orgs, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*Org)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNOrg2ᚕᚖgithubᚗcomᚋbpragerᚋnpsᚐOrg(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Query_survey(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
@@ -1623,10 +2048,17 @@ func (ec *executionContext) _Query_allSurveys(ctx context.Context, field graphql
 		IsMethod: true,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_allSurveys_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	rctx.Args = args
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().AllSurveys(rctx)
+		return ec.resolvers.Query().AllSurveys(rctx, args["limit"].(int), args["offset"].(int))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1638,10 +2070,10 @@ func (ec *executionContext) _Query_allSurveys(ctx context.Context, field graphql
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*Survey)
+	res := resTmp.(*SurveysResult)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNSurvey2ᚕᚖgithubᚗcomᚋbpragerᚋnpsᚐSurvey(ctx, field.Selections, res)
+	return ec.marshalNSurveysResult2ᚖgithubᚗcomᚋbpragerᚋnpsᚐSurveysResult(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_user(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -1714,7 +2146,7 @@ func (ec *executionContext) _Query_users(ctx context.Context, field graphql.Coll
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Users(rctx, args["tags"].([]string), args["categories"].([]string), args["org"].(string))
+		return ec.resolvers.Query().Users(rctx, args["tags"].([]string), args["categories"].([]string), args["org"].(*string), args["limit"].(int), args["offset"].(int))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1726,10 +2158,10 @@ func (ec *executionContext) _Query_users(ctx context.Context, field graphql.Coll
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*User)
+	res := resTmp.(*UsersResult)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNUser2ᚕᚖgithubᚗcomᚋbpragerᚋnpsᚐUser(ctx, field.Selections, res)
+	return ec.marshalNUsersResult2ᚖgithubᚗcomᚋbpragerᚋnpsᚐUsersResult(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_allUsers(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -1748,10 +2180,17 @@ func (ec *executionContext) _Query_allUsers(ctx context.Context, field graphql.C
 		IsMethod: true,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_allUsers_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	rctx.Args = args
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().AllUsers(rctx)
+		return ec.resolvers.Query().AllUsers(rctx, args["limit"].(int), args["offset"].(int))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1763,10 +2202,10 @@ func (ec *executionContext) _Query_allUsers(ctx context.Context, field graphql.C
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*User)
+	res := resTmp.(*UsersResult)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNUser2ᚕᚖgithubᚗcomᚋbpragerᚋnpsᚐUser(ctx, field.Selections, res)
+	return ec.marshalNUsersResult2ᚖgithubᚗcomᚋbpragerᚋnpsᚐUsersResult(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_allOrgs(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -1785,10 +2224,17 @@ func (ec *executionContext) _Query_allOrgs(ctx context.Context, field graphql.Co
 		IsMethod: true,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_allOrgs_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	rctx.Args = args
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().AllOrgs(rctx)
+		return ec.resolvers.Query().AllOrgs(rctx, args["limit"].(int), args["offset"].(int))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1800,10 +2246,10 @@ func (ec *executionContext) _Query_allOrgs(ctx context.Context, field graphql.Co
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*Org)
+	res := resTmp.(*OrgsResult)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNOrg2ᚕᚖgithubᚗcomᚋbpragerᚋnpsᚐOrg(ctx, field.Selections, res)
+	return ec.marshalNOrgsResult2ᚖgithubᚗcomᚋbpragerᚋnpsᚐOrgsResult(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_allCategories(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -1822,10 +2268,17 @@ func (ec *executionContext) _Query_allCategories(ctx context.Context, field grap
 		IsMethod: true,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_allCategories_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	rctx.Args = args
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().AllCategories(rctx)
+		return ec.resolvers.Query().AllCategories(rctx, args["limit"].(int), args["offset"].(int))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1837,47 +2290,10 @@ func (ec *executionContext) _Query_allCategories(ctx context.Context, field grap
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*Category)
+	res := resTmp.(*CategoriesResult)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNCategory2ᚕᚖgithubᚗcomᚋbpragerᚋnpsᚐCategory(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Query_allTags(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-		ec.Tracer.EndFieldExecution(ctx)
-	}()
-	rctx := &graphql.ResolverContext{
-		Object:   "Query",
-		Field:    field,
-		Args:     nil,
-		IsMethod: true,
-	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().AllTags(rctx)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !ec.HasError(rctx) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]*Tag)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNTag2ᚕᚖgithubᚗcomᚋbpragerᚋnpsᚐTag(ctx, field.Selections, res)
+	return ec.marshalNCategoriesResult2ᚖgithubᚗcomᚋbpragerᚋnpsᚐCategoriesResult(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_tag(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -1962,10 +2378,54 @@ func (ec *executionContext) _Query_tags(ctx context.Context, field graphql.Colle
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*Tag)
+	res := resTmp.(*TagsResult)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNTag2ᚕᚖgithubᚗcomᚋbpragerᚋnpsᚐTag(ctx, field.Selections, res)
+	return ec.marshalNTagsResult2ᚖgithubᚗcomᚋbpragerᚋnpsᚐTagsResult(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_allTags(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Query",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_allTags_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	rctx.Args = args
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().AllTags(rctx, args["limit"].(int), args["offset"].(int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*TagsResult)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNTagsResult2ᚖgithubᚗcomᚋbpragerᚋnpsᚐTagsResult(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -2364,6 +2824,80 @@ func (ec *executionContext) _Survey_note(ctx context.Context, field graphql.Coll
 	return ec.marshalONote2ᚖgithubᚗcomᚋbpragerᚋnpsᚐNote(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _SurveysResult_totalCount(ctx context.Context, field graphql.CollectedField, obj *SurveysResult) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "SurveysResult",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TotalCount, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _SurveysResult_surveys(ctx context.Context, field graphql.CollectedField, obj *SurveysResult) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "SurveysResult",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Surveys, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*Survey)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNSurvey2ᚕᚖgithubᚗcomᚋbpragerᚋnpsᚐSurvey(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Tag_id(ctx context.Context, field graphql.CollectedField, obj *Tag) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
@@ -2538,6 +3072,80 @@ func (ec *executionContext) _Tag_timestamp(ctx context.Context, field graphql.Co
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalODateTime2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _TagsResult_totalCount(ctx context.Context, field graphql.CollectedField, obj *TagsResult) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "TagsResult",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TotalCount, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _TagsResult_tags(ctx context.Context, field graphql.CollectedField, obj *TagsResult) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "TagsResult",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Tags, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*Tag)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNTag2ᚕᚖgithubᚗcomᚋbpragerᚋnpsᚐTag(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _User_id(ctx context.Context, field graphql.CollectedField, obj *User) (ret graphql.Marshaler) {
@@ -2825,6 +3433,80 @@ func (ec *executionContext) _User_categories(ctx context.Context, field graphql.
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalNCategory2ᚕᚖgithubᚗcomᚋbpragerᚋnpsᚐCategory(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _UsersResult_totalCount(ctx context.Context, field graphql.CollectedField, obj *UsersResult) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "UsersResult",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TotalCount, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _UsersResult_users(ctx context.Context, field graphql.CollectedField, obj *UsersResult) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "UsersResult",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Users, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*User)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNUser2ᚕᚖgithubᚗcomᚋbpragerᚋnpsᚐUser(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) ___Directive_name(ctx context.Context, field graphql.CollectedField, obj *introspection.Directive) (ret graphql.Marshaler) {
@@ -3986,6 +4668,38 @@ func (ec *executionContext) ___Type_ofType(ctx context.Context, field graphql.Co
 
 // region    **************************** object.gotpl ****************************
 
+var categoriesResultImplementors = []string{"CategoriesResult"}
+
+func (ec *executionContext) _CategoriesResult(ctx context.Context, sel ast.SelectionSet, obj *CategoriesResult) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.RequestContext, sel, categoriesResultImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("CategoriesResult")
+		case "totalCount":
+			out.Values[i] = ec._CategoriesResult_totalCount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "categories":
+			out.Values[i] = ec._CategoriesResult_categories(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var categoryImplementors = []string{"Category"}
 
 func (ec *executionContext) _Category(ctx context.Context, sel ast.SelectionSet, obj *Category) graphql.Marshaler {
@@ -4145,6 +4859,38 @@ func (ec *executionContext) _Org(ctx context.Context, sel ast.SelectionSet, obj 
 	return out
 }
 
+var orgsResultImplementors = []string{"OrgsResult"}
+
+func (ec *executionContext) _OrgsResult(ctx context.Context, sel ast.SelectionSet, obj *OrgsResult) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.RequestContext, sel, orgsResultImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("OrgsResult")
+		case "totalCount":
+			out.Values[i] = ec._OrgsResult_totalCount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "orgs":
+			out.Values[i] = ec._OrgsResult_orgs(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var queryImplementors = []string{"Query"}
 
 func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) graphql.Marshaler {
@@ -4258,20 +5004,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				}
 				return res
 			})
-		case "allTags":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_allTags(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			})
 		case "tag":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
@@ -4295,6 +5027,20 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_tags(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "allTags":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_allTags(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -4392,6 +5138,38 @@ func (ec *executionContext) _Survey(ctx context.Context, sel ast.SelectionSet, o
 	return out
 }
 
+var surveysResultImplementors = []string{"SurveysResult"}
+
+func (ec *executionContext) _SurveysResult(ctx context.Context, sel ast.SelectionSet, obj *SurveysResult) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.RequestContext, sel, surveysResultImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("SurveysResult")
+		case "totalCount":
+			out.Values[i] = ec._SurveysResult_totalCount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "surveys":
+			out.Values[i] = ec._SurveysResult_surveys(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var tagImplementors = []string{"Tag"}
 
 func (ec *executionContext) _Tag(ctx context.Context, sel ast.SelectionSet, obj *Tag) graphql.Marshaler {
@@ -4457,6 +5235,38 @@ func (ec *executionContext) _Tag(ctx context.Context, sel ast.SelectionSet, obj 
 	return out
 }
 
+var tagsResultImplementors = []string{"TagsResult"}
+
+func (ec *executionContext) _TagsResult(ctx context.Context, sel ast.SelectionSet, obj *TagsResult) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.RequestContext, sel, tagsResultImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("TagsResult")
+		case "totalCount":
+			out.Values[i] = ec._TagsResult_totalCount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "tags":
+			out.Values[i] = ec._TagsResult_tags(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var userImplementors = []string{"User"}
 
 func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj *User) graphql.Marshaler {
@@ -4496,6 +5306,38 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 			}
 		case "categories":
 			out.Values[i] = ec._User_categories(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var usersResultImplementors = []string{"UsersResult"}
+
+func (ec *executionContext) _UsersResult(ctx context.Context, sel ast.SelectionSet, obj *UsersResult) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.RequestContext, sel, usersResultImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("UsersResult")
+		case "totalCount":
+			out.Values[i] = ec._UsersResult_totalCount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "users":
+			out.Values[i] = ec._UsersResult_users(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -4769,6 +5611,20 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 	return res
 }
 
+func (ec *executionContext) marshalNCategoriesResult2githubᚗcomᚋbpragerᚋnpsᚐCategoriesResult(ctx context.Context, sel ast.SelectionSet, v CategoriesResult) graphql.Marshaler {
+	return ec._CategoriesResult(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNCategoriesResult2ᚖgithubᚗcomᚋbpragerᚋnpsᚐCategoriesResult(ctx context.Context, sel ast.SelectionSet, v *CategoriesResult) graphql.Marshaler {
+	if v == nil {
+		if !ec.HasError(graphql.GetResolverContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._CategoriesResult(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNCategory2githubᚗcomᚋbpragerᚋnpsᚐCategory(ctx context.Context, sel ast.SelectionSet, v Category) graphql.Marshaler {
 	return ec._Category(ctx, sel, &v)
 }
@@ -4862,6 +5718,20 @@ func (ec *executionContext) marshalNID2string(ctx context.Context, sel ast.Selec
 	return res
 }
 
+func (ec *executionContext) unmarshalNInt2int(ctx context.Context, v interface{}) (int, error) {
+	return graphql.UnmarshalInt(v)
+}
+
+func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.SelectionSet, v int) graphql.Marshaler {
+	res := graphql.MarshalInt(v)
+	if res == graphql.Null {
+		if !ec.HasError(graphql.GetResolverContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+	}
+	return res
+}
+
 func (ec *executionContext) marshalNOrg2githubᚗcomᚋbpragerᚋnpsᚐOrg(ctx context.Context, sel ast.SelectionSet, v Org) graphql.Marshaler {
 	return ec._Org(ctx, sel, &v)
 }
@@ -4911,6 +5781,20 @@ func (ec *executionContext) marshalNOrg2ᚖgithubᚗcomᚋbpragerᚋnpsᚐOrg(ct
 		return graphql.Null
 	}
 	return ec._Org(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNOrgsResult2githubᚗcomᚋbpragerᚋnpsᚐOrgsResult(ctx context.Context, sel ast.SelectionSet, v OrgsResult) graphql.Marshaler {
+	return ec._OrgsResult(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNOrgsResult2ᚖgithubᚗcomᚋbpragerᚋnpsᚐOrgsResult(ctx context.Context, sel ast.SelectionSet, v *OrgsResult) graphql.Marshaler {
+	if v == nil {
+		if !ec.HasError(graphql.GetResolverContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._OrgsResult(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNQuestion2githubᚗcomᚋbpragerᚋnpsᚐQuestion(ctx context.Context, sel ast.SelectionSet, v Question) graphql.Marshaler {
@@ -4987,7 +5871,7 @@ func (ec *executionContext) marshalNSurvey2ᚕᚖgithubᚗcomᚋbpragerᚋnpsᚐ
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNSurvey2ᚖgithubᚗcomᚋbpragerᚋnpsᚐSurvey(ctx, sel, v[i])
+			ret[i] = ec.marshalOSurvey2ᚖgithubᚗcomᚋbpragerᚋnpsᚐSurvey(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -5008,6 +5892,20 @@ func (ec *executionContext) marshalNSurvey2ᚖgithubᚗcomᚋbpragerᚋnpsᚐSur
 		return graphql.Null
 	}
 	return ec._Survey(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNSurveysResult2githubᚗcomᚋbpragerᚋnpsᚐSurveysResult(ctx context.Context, sel ast.SelectionSet, v SurveysResult) graphql.Marshaler {
+	return ec._SurveysResult(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNSurveysResult2ᚖgithubᚗcomᚋbpragerᚋnpsᚐSurveysResult(ctx context.Context, sel ast.SelectionSet, v *SurveysResult) graphql.Marshaler {
+	if v == nil {
+		if !ec.HasError(graphql.GetResolverContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._SurveysResult(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNTag2githubᚗcomᚋbpragerᚋnpsᚐTag(ctx context.Context, sel ast.SelectionSet, v Tag) graphql.Marshaler {
@@ -5061,6 +5959,20 @@ func (ec *executionContext) marshalNTag2ᚖgithubᚗcomᚋbpragerᚋnpsᚐTag(ct
 	return ec._Tag(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalNTagsResult2githubᚗcomᚋbpragerᚋnpsᚐTagsResult(ctx context.Context, sel ast.SelectionSet, v TagsResult) graphql.Marshaler {
+	return ec._TagsResult(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNTagsResult2ᚖgithubᚗcomᚋbpragerᚋnpsᚐTagsResult(ctx context.Context, sel ast.SelectionSet, v *TagsResult) graphql.Marshaler {
+	if v == nil {
+		if !ec.HasError(graphql.GetResolverContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._TagsResult(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNUser2githubᚗcomᚋbpragerᚋnpsᚐUser(ctx context.Context, sel ast.SelectionSet, v User) graphql.Marshaler {
 	return ec._User(ctx, sel, &v)
 }
@@ -5110,6 +6022,20 @@ func (ec *executionContext) marshalNUser2ᚖgithubᚗcomᚋbpragerᚋnpsᚐUser(
 		return graphql.Null
 	}
 	return ec._User(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNUsersResult2githubᚗcomᚋbpragerᚋnpsᚐUsersResult(ctx context.Context, sel ast.SelectionSet, v UsersResult) graphql.Marshaler {
+	return ec._UsersResult(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNUsersResult2ᚖgithubᚗcomᚋbpragerᚋnpsᚐUsersResult(ctx context.Context, sel ast.SelectionSet, v *UsersResult) graphql.Marshaler {
+	if v == nil {
+		if !ec.HasError(graphql.GetResolverContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._UsersResult(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalN__Directive2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective(ctx context.Context, sel ast.SelectionSet, v introspection.Directive) graphql.Marshaler {
@@ -5516,6 +6442,17 @@ func (ec *executionContext) marshalOString2ᚖstring(ctx context.Context, sel as
 		return graphql.Null
 	}
 	return ec.marshalOString2string(ctx, sel, *v)
+}
+
+func (ec *executionContext) marshalOSurvey2githubᚗcomᚋbpragerᚋnpsᚐSurvey(ctx context.Context, sel ast.SelectionSet, v Survey) graphql.Marshaler {
+	return ec._Survey(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalOSurvey2ᚖgithubᚗcomᚋbpragerᚋnpsᚐSurvey(ctx context.Context, sel ast.SelectionSet, v *Survey) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Survey(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalO__EnumValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐEnumValue(ctx context.Context, sel ast.SelectionSet, v []introspection.EnumValue) graphql.Marshaler {

@@ -32,21 +32,21 @@ type TagsResult {
 
 type Query {
   survey(id: ID!): Survey!
-  allSurveys(limit: Int, offset: Int): SurveysResult!
+  allSurveys(limit: Int!, offset: Int!): SurveysResult!
   user(id: ID!): User!
   users(
     tags: [ID!]
     categories: [ID!]
     org: ID
-    limit: Int
-    offset: Int
+    limit: Int!
+    offset: Int!
   ): UsersResult!
-  allUsers(limit: Int, offset: Int): UsersResult!
-  allOrgs(limit: Int, offset: Int): OrgsResult!
-  allCategories(limit: Int, offset: Int): CategoriesResult!
+  allUsers(limit: Int!, offset: Int!): UsersResult!
+  allOrgs(limit: Int!, offset: Int!): OrgsResult!
+  allCategories(limit: Int!, offset: Int!): CategoriesResult!
   tag(id: ID!): Tag!
   tags(user: ID!): TagsResult!
-  allTags(limit: Int, offset: Int): TagsResult!
+  allTags(limit: Int!, offset: Int!): TagsResult!
 }
 
 type Mutation {

@@ -2,23 +2,24 @@ package nps
 
 import (
 	"context"
-	"database/sql"
 	"log"
 )
 
 // Tag ...
 type Tag struct {
-	ID        int             `json:"id"`
-	Name      string          `json:"name"`
-	Attribute *sql.NullString `json:"attribute"`
-	Number    sql.NullInt64   `json:"number"`
-	Timestamp *sql.NullString `json:"timestamp"`
+	ID        int         `json:"id"`
+	Name      string      `json:"name"`
+	Attribute *NullString `json:"attribute"`
+	Number    NullInt64   `json:"number"`
+	Timestamp *NullString `json:"timestamp"`
 }
 
-func (r *queryResolver) AllTags(ctx context.Context) ([]*Tag, error) {
+// AllTags ...
+func (r *queryResolver) AllTags(ctx context.Context, limit int, offset int) (*TagsResult, error) {
+	result := new(TagsResult)
 	var tags []*Tag
 	query := `
-		SELECT id, name, attribute, number, timestamp
+		SELECT id, name, attribute, number, timestamp, count(*)
 		FROM tags
 	`
 
@@ -28,15 +29,17 @@ func (r *queryResolver) AllTags(ctx context.Context) ([]*Tag, error) {
 	}
 	for rows.Next() {
 		t := new(Tag)
-		err := rows.StructScan(t)
+		err := rows.Scan(&t.ID, &t.Name, &t.Attribute, &t.Number, &t.Timestamp, &result.TotalCount)
 		if err != nil {
 			log.Fatalln(err)
 		}
 		tags = append(tags, t)
 	}
-	return tags, nil
+	result.Tags = tags
+	return result, nil
 }
 
+// AddTag ...
 func (r *mutationResolver) AddTag(ctx context.Context, name string, attribute *string, number *int, timestamp *string) (bool, error) {
 	query := `
 		INSERT INTO tags (name, attribute, number, timestamp)

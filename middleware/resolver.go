@@ -3,6 +3,7 @@ package nps
 import (
 	"context"
 ) // THIS CODE IS A STARTING POINT ONLY. IT WILL NOT BE UPDATED WITH SCHEMA CHANGES.
+
 // Resolver ...
 type Resolver struct{}
 
@@ -44,25 +45,25 @@ type queryResolver struct{ *Resolver }
 func (r *queryResolver) Survey(ctx context.Context, id string) (*Survey, error) {
 	panic("not implemented")
 }
-func (r *queryResolver) AllSurveys(ctx context.Context) ([]*Survey, error) {
+func (r *queryResolver) AllSurveys(ctx context.Context, limit int, offset int) (*SurveysResult, error) {
 	panic("not implemented")
 }
 func (r *queryResolver) User(ctx context.Context, id string) (*User, error) {
 	panic("not implemented")
 }
-func (r *queryResolver) Users(ctx context.Context, tags []string, categories []string, org string) ([]*User, error) {
+func (r *queryResolver) Users(ctx context.Context, tags []string, categories []string, org *string, limit int, offset int) (*UsersResult, error) {
 	panic("not implemented")
 }
-func (r *queryResolver) AllOrgs(ctx context.Context) ([]*Org, error) {
+func (r *queryResolver) AllOrgs(ctx context.Context, limit int, offset int) (*OrgsResult, error) {
 	panic("not implemented")
 }
-func (r *queryResolver) AllCategories(ctx context.Context) ([]*Category, error) {
+func (r *queryResolver) AllCategories(ctx context.Context, limit int, offset int) (*CategoriesResult, error) {
 	panic("not implemented")
 }
 func (r *queryResolver) Tag(ctx context.Context, id string) (*Tag, error) {
 	panic("not implemented")
 }
-func (r *queryResolver) Tags(ctx context.Context, user string) ([]*Tag, error) {
+func (r *queryResolver) Tags(ctx context.Context, user string) (*TagsResult, error) {
 	panic("not implemented")
 }
 

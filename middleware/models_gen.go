@@ -2,6 +2,11 @@
 
 package nps
 
+type CategoriesResult struct {
+	TotalCount int         `json:"totalCount"`
+	Categories []*Category `json:"categories"`
+}
+
 type Category struct {
 	ID     string    `json:"id"`
 	Name   string    `json:"name"`
@@ -19,6 +24,11 @@ type Org struct {
 	Name string `json:"name"`
 }
 
+type OrgsResult struct {
+	TotalCount int    `json:"totalCount"`
+	Orgs       []*Org `json:"orgs"`
+}
+
 type Question struct {
 	ID   string `json:"id"`
 	Open bool   `json:"open"`
@@ -32,4 +42,19 @@ type Survey struct {
 	ScoreQuestion *Question `json:"scoreQuestion"`
 	OpenQuestion  *Question `json:"openQuestion"`
 	Note          *Note     `json:"note"`
+}
+
+type SurveysResult struct {
+	TotalCount int       `json:"totalCount"`
+	Surveys    []*Survey `json:"surveys"`
+}
+
+type TagsResult struct {
+	TotalCount int    `json:"totalCount"`
+	Tags       []*Tag `json:"tags"`
+}
+
+type UsersResult struct {
+	TotalCount int     `json:"totalCount"`
+	Users      []*User `json:"users"`
 }
