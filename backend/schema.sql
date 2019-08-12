@@ -43,7 +43,7 @@ CREATE FUNCTION public.update_categories_parent_path() RETURNS trigger
         IF NEW.parent IS NULL THEN
             NEW.parent_path = 'root'::ltree;
         ELSEIF TG_OP = 'INSERT' OR OLD.parent IS NULL OR OLD.parent != NEW.parent THEN
-            SELECT parent_path || id::text FROM section WHERE id = NEW.parent INTO path;
+            SELECT parent_path || id::text FROM categories WHERE id = NEW.parent INTO path;
             IF path IS NULL THEN
                 RAISE EXCEPTION 'Invalid parent_id %', NEW.parent_id;
             END IF;
