@@ -18,4 +18,6 @@ models:
     model: github.com/bprager/nps.User
   Tag:
     model: github.com/bprager/nps.Tag
+  Org:
+    model: github.com/bprager/nps.Org
   

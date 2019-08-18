@@ -10,7 +10,7 @@ type Tag struct {
 	ID        int         `json:"id"`
 	Name      string      `json:"name"`
 	Attribute *NullString `json:"attribute"`
-	Number    NullInt64   `json:"number"`
+	Number    *NullInt64  `json:"number"`
 	Timestamp *NullString `json:"timestamp"`
 }
 

@@ -19,16 +19,6 @@ type Note struct {
 	Saved string `json:"saved"`
 }
 
-type Org struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
-}
-
-type OrgsResult struct {
-	TotalCount int    `json:"totalCount"`
-	Orgs       []*Org `json:"orgs"`
-}
-
 type Question struct {
 	ID   string `json:"id"`
 	Open bool   `json:"open"`
