@@ -1,0 +1,278 @@
+postgresqlUsername:
+initdbScripts:
+  init.sql: |
+    SET statement_timeout = 0;
+    SET lock_timeout = 0;
+    SET idle_in_transaction_session_timeout = 0;
+    SET client_encoding = 'UTF8';
+    SET standard_conforming_strings = on;
+    SELECT pg_catalog.set_config('search_path', '', false);
+    SET check_function_bodies = false;
+    SET xmloption = content;
+    SET client_min_messages = warning;
+    SET row_security = off;
+    CREATE EXTENSION IF NOT EXISTS ltree WITH SCHEMA public;
+    COMMENT ON EXTENSION ltree IS 'data type for hierarchical tree-like structures';
+    CREATE FUNCTION public.update_categories_parent_path() RETURNS trigger
+        LANGUAGE plpgsql
+        AS $$
+        DECLARE
+            path ltree;
+        BEGIN
+            IF NEW.parent IS NULL THEN
+                NEW.parent_path = 'root'::ltree;
+            ELSEIF TG_OP = 'INSERT' OR OLD.parent IS NULL OR OLD.parent != NEW.parent THEN
+                SELECT parent_path || id::text FROM categories WHERE id = NEW.parent INTO path;
+                IF path IS NULL THEN
+                    RAISE EXCEPTION 'Invalid parent_id %', NEW.parent_id;
+                END IF;
+                NEW.parent_path = path;
+            END IF;
+            RETURN NEW;
+        END;
+    $$;
+    ALTER FUNCTION public.update_categories_parent_path() OWNER TO postgres;
+    SET default_tablespace = '';
+    SET default_with_oids = false;
+    CREATE TABLE public.answers (
+        id integer NOT NULL,
+        "user" integer NOT NULL,
+        survey integer NOT NULL,
+        score smallint,
+        body character varying
+    );
+    ALTER TABLE public.answers OWNER TO postgres;
+    CREATE SEQUENCE public.answer_id_seq
+        AS integer
+        START WITH 1
+        INCREMENT BY 1
+        NO MINVALUE
+        NO MAXVALUE
+        CACHE 1;
+    ALTER TABLE public.answer_id_seq OWNER TO postgres;
+    ALTER SEQUENCE public.answer_id_seq OWNED BY public.answers.id;
+    CREATE TABLE public.categories (
+        id integer NOT NULL,
+        name character varying,
+        parent integer,
+        parent_path public.ltree
+    );
+    ALTER TABLE public.categories OWNER TO postgres;
+    CREATE SEQUENCE public.categories_id_seq
+        AS integer
+        START WITH 1
+        INCREMENT BY 1
+        NO MINVALUE
+        NO MAXVALUE
+        CACHE 1;
+    ALTER TABLE public.categories_id_seq OWNER TO postgres;
+    ALTER SEQUENCE public.categories_id_seq OWNED BY public.categories.id;
+    CREATE TABLE public.notes (
+        id integer NOT NULL,
+        text text,
+        saved timestamp with time zone NOT NULL
+    );
+    ALTER TABLE public.notes OWNER TO postgres;
+    CREATE SEQUENCE public.notes_id_seq
+        AS integer
+        START WITH 1
+        INCREMENT BY 1
+        NO MINVALUE
+        NO MAXVALUE
+        CACHE 1;
+    ALTER TABLE public.notes_id_seq OWNER TO postgres;
+    ALTER SEQUENCE public.notes_id_seq OWNED BY public.notes.id;
+    CREATE TABLE public.orgs (
+        id integer NOT NULL,
+        name character varying
+    );
+    ALTER TABLE public.orgs OWNER TO postgres;
+    CREATE SEQUENCE public.orgs_id_seq
+        AS integer
+        START WITH 1
+        INCREMENT BY 1
+        NO MINVALUE
+        NO MAXVALUE
+        CACHE 1;
+    ALTER TABLE public.orgs_id_seq OWNER TO postgres;
+    ALTER SEQUENCE public.orgs_id_seq OWNED BY public.orgs.id;
+    CREATE TABLE public.questions (
+        id integer NOT NULL,
+        open boolean,
+        body text NOT NULL
+    );
+    ALTER TABLE public.questions OWNER TO postgres;
+    CREATE SEQUENCE public.question_id_seq
+        AS integer
+        START WITH 1
+        INCREMENT BY 1
+        NO MINVALUE
+        NO MAXVALUE
+        CACHE 1;
+    ALTER TABLE public.question_id_seq OWNER TO postgres;
+    ALTER SEQUENCE public.question_id_seq OWNED BY public.questions.id;
+    CREATE TABLE public.surveys (
+        id integer NOT NULL,
+        start date,
+        "end" date,
+        score_question integer,
+        open_question integer,
+        note integer
+    );
+    ALTER TABLE public.surveys OWNER TO postgres;
+    CREATE SEQUENCE public.survey_id_seq
+        AS integer
+        START WITH 1
+        INCREMENT BY 1
+        NO MINVALUE
+        NO MAXVALUE
+        CACHE 1;
+    ALTER TABLE public.survey_id_seq OWNER TO postgres;
+    ALTER SEQUENCE public.survey_id_seq OWNED BY public.surveys.id;
+    CREATE TABLE public.tags (
+        id integer NOT NULL,
+        name character varying,
+        attribute character varying,
+        number integer,
+        "timestamp" timestamp without time zone
+    );
+    ALTER TABLE public.tags OWNER TO postgres;
+    CREATE SEQUENCE public.tags_id_seq
+        AS integer
+        START WITH 1
+        INCREMENT BY 1
+        NO MINVALUE
+        NO MAXVALUE
+        CACHE 1;
+    ALTER TABLE public.tags_id_seq OWNER TO postgres;
+    ALTER SEQUENCE public.tags_id_seq OWNED BY public.tags.id;
+    CREATE TABLE public.user_category_idx (
+        id integer NOT NULL,
+    ALTER TABLE public.user_category_idx OWNER TO postgres;
+    CREATE SEQUENCE public.user_category_idx_id_seq
+        AS integer
+        START WITH 1
+        INCREMENT BY 1
+        NO MINVALUE
+        NO MAXVALUE
+        CACHE 1;
+    ALTER TABLE public.user_category_idx_id_seq OWNER TO postgres;
+    ALTER SEQUENCE public.user_category_idx_id_seq OWNED BY public.user_category_idx.id;
+    CREATE SEQUENCE public.user_id_seq
+        START WITH 1
+        INCREMENT BY 1
+        NO MINVALUE
+        NO MAXVALUE
+        CACHE 1;
+    ALTER TABLE public.user_id_seq OWNER TO postgres;
+    CREATE TABLE public.user_org_idx (
+        id integer NOT NULL,
+        "user" integer,
+        org integer
+    );
+    ALTER TABLE public.user_org_idx OWNER TO postgres;
+    CREATE SEQUENCE public.user_org_idx_id_seq
+        AS integer
+        START WITH 1
+        INCREMENT BY 1
+        NO MINVALUE
+        NO MAXVALUE
+        CACHE 1;
+    ALTER TABLE public.user_org_idx_id_seq OWNER TO postgres;
+    ALTER SEQUENCE public.user_org_idx_id_seq OWNED BY public.user_org_idx.id;
+    CREATE TABLE public.user_tag_idx (
+        id integer NOT NULL,
+        "user" integer,
+        tag integer
+    );
+    ALTER TABLE public.user_tag_idx OWNER TO postgres;
+    CREATE SEQUENCE public.user_tag_idx_id_seq
+        AS integer
+        START WITH 1
+        INCREMENT BY 1
+        NO MINVALUE
+        NO MAXVALUE
+        CACHE 1;
+    ALTER TABLE public.user_tag_idx_id_seq OWNER TO postgres;
+    ALTER SEQUENCE public.user_tag_idx_id_seq OWNED BY public.user_tag_idx.id;
+    CREATE TABLE public.users (
+        id integer NOT NULL,
+        email character varying,
+        first_name character varying,
+        last_name character varying,
+        nick_name character varying
+    );
+    ALTER TABLE public.users OWNER TO postgres;
+    CREATE SEQUENCE public.users_id_seq
+        AS integer
+        START WITH 1
+        INCREMENT BY 1
+        NO MINVALUE
+        NO MAXVALUE
+        CACHE 1;
+    ALTER TABLE public.users_id_seq OWNER TO postgres;
+    ALTER SEQUENCE public.users_id_seq OWNED BY public.users.id;
+    ALTER TABLE ONLY public.answers ALTER COLUMN id SET DEFAULT nextval('public.answer_id_seq'::regclass);
+    ALTER TABLE ONLY public.categories ALTER COLUMN id SET DEFAULT nextval('public.categories_id_seq'::regclass);
+    ALTER TABLE ONLY public.notes ALTER COLUMN id SET DEFAULT nextval('public.notes_id_seq'::regclass);
+    ALTER TABLE ONLY public.orgs ALTER COLUMN id SET DEFAULT nextval('public.orgs_id_seq'::regclass);
+    ALTER TABLE ONLY public.questions ALTER COLUMN id SET DEFAULT nextval('public.question_id_seq'::regclass);
+    ALTER TABLE ONLY public.surveys ALTER COLUMN id SET DEFAULT nextval('public.survey_id_seq'::regclass);
+    ALTER TABLE ONLY public.tags ALTER COLUMN id SET DEFAULT nextval('public.tags_id_seq'::regclass);
+    ALTER TABLE ONLY public.user_category_idx ALTER COLUMN id SET DEFAULT nextval('public.user_category_idx_id_seq'::regclass);
+    ALTER TABLE ONLY public.user_org_idx ALTER COLUMN id SET DEFAULT nextval('public.user_org_idx_id_seq'::regclass);
+    ALTER TABLE ONLY public.user_tag_idx ALTER COLUMN id SET DEFAULT nextval('public.user_tag_idx_id_seq'::regclass);
+    ALTER TABLE ONLY public.users ALTER COLUMN id SET DEFAULT nextval('public.users_id_seq'::regclass);
+    ALTER TABLE ONLY public.answers
+        ADD CONSTRAINT answer_pk PRIMARY KEY (id);
+    ALTER TABLE ONLY public.categories
+        ADD CONSTRAINT categories_pk PRIMARY KEY (id);
+    ALTER TABLE ONLY public.notes
+        ADD CONSTRAINT notes_pk PRIMARY KEY (id);
+    ALTER TABLE ONLY public.orgs
+        ADD CONSTRAINT orgs_pk PRIMARY KEY (id);
+    ALTER TABLE ONLY public.questions
+        ADD CONSTRAINT question_pk PRIMARY KEY (id);
+    ALTER TABLE ONLY public.surveys
+        ADD CONSTRAINT survey_pk PRIMARY KEY (id);
+    ALTER TABLE ONLY public.tags
+        ADD CONSTRAINT tags_pk PRIMARY KEY (id);
+    ALTER TABLE ONLY public.user_category_idx
+        ADD CONSTRAINT user_category_idx_pk PRIMARY KEY (id);
+    ALTER TABLE ONLY public.user_org_idx
+        ADD CONSTRAINT user_org_idx_pk PRIMARY KEY (id);
+    ALTER TABLE ONLY public.users
+        ADD CONSTRAINT users_pk PRIMARY KEY (id);
+    CREATE INDEX answer_survey_idx ON public.answers USING btree (survey);
+    CREATE INDEX answer_user_idx ON public.answers USING btree ("user");
+    CREATE INDEX categories_name_idx ON public.categories USING btree (name);
+    CREATE INDEX categories_parent_idx ON public.categories USING btree (parent);
+    CREATE INDEX tags_name_idx ON public.tags USING btree (name);
+    CREATE INDEX user_org_idx_user_idx ON public.user_org_idx USING btree ("user");
+    CREATE INDEX user_tag_idx_tag_idx ON public.user_tag_idx USING btree (tag);
+    CREATE INDEX user_tag_idx_user_idx ON public.user_tag_idx USING btree ("user");
+    CREATE TRIGGER parent_path_tgr BEFORE INSERT OR UPDATE ON public.categories FOR EACH ROW EXECUTE PROCEDURE public.update_categories_parent_path();
+    ALTER TABLE ONLY public.answers
+        ADD CONSTRAINT answer_survey_fk FOREIGN KEY (survey) REFERENCES public.surveys(id) ON DELETE RESTRICT;
+    ALTER TABLE ONLY public.answers
+        ADD CONSTRAINT answer_user_fk FOREIGN KEY ("user") REFERENCES public.users(id) ON DELETE SET NULL;
+    ALTER TABLE ONLY public.categories
+        ADD CONSTRAINT categories_fk FOREIGN KEY (parent) REFERENCES public.categories(id) ON DELETE CASCADE;
+    ALTER TABLE ONLY public.surveys
+        ADD CONSTRAINT survey_note_fk FOREIGN KEY (note) REFERENCES public.notes(id) ON DELETE RESTRICT;
+    ALTER TABLE ONLY public.surveys
+        ADD CONSTRAINT survey_open_fk FOREIGN KEY (open_question) REFERENCES public.questions(id) ON DELETE RESTRICT;
+    ALTER TABLE ONLY public.surveys
+        ADD CONSTRAINT survey_score_fk FOREIGN KEY (score_question) REFERENCES public.questions(id) ON DELETE RESTRICT;
+    ALTER TABLE ONLY public.user_category_idx
+        ADD CONSTRAINT user_category_category_idx_fk FOREIGN KEY (category) REFERENCES public.categories(id) ON DELETE CASCADE;
+    ALTER TABLE ONLY public.user_category_idx
+        ADD CONSTRAINT user_category_user_idx_fk FOREIGN KEY ("user") REFERENCES public.users(id) ON DELETE CASCADE;
+    ALTER TABLE ONLY public.user_org_idx
+        ADD CONSTRAINT user_org_org_idx_fk FOREIGN KEY (org) REFERENCES public.orgs(id) ON DELETE CASCADE;
+    ALTER TABLE ONLY public.user_org_idx
+        ADD CONSTRAINT user_org_user_idx_fk FOREIGN KEY ("user") REFERENCES public.users(id) ON DELETE CASCADE;
+    ALTER TABLE ONLY public.user_tag_idx
+        ADD CONSTRAINT user_tag_idx_tag_fk FOREIGN KEY (tag) REFERENCES public.tags(id) ON DELETE CASCADE;
+    ALTER TABLE ONLY public.user_tag_idx
+        ADD CONSTRAINT user_tag_idx_user_fk FOREIGN KEY ("user") REFERENCES public.users(id) ON DELETE CASCADE;
