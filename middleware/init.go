@@ -9,7 +9,8 @@ import (
 	"github.com/joho/godotenv"
 
 	// Postgresql driver
-	_ "github.com/lib/pq"
+	// _ "github.com/lib/pq" ** abondoned
+	_ "github.com/jackc/pgx/stdlib"
 )
 
 // DB database handler
@@ -26,7 +27,7 @@ func init() {
 	dbHost := os.Getenv("PG_HOST")
 	// connect
 	dbinfo := fmt.Sprintf("host=%s user=%s password=%s sslmode=disable", dbHost, dbUser, dbPwd)
-	DB, err = sqlx.Open("postgres", dbinfo)
+	DB, err = sqlx.Open("pgx", dbinfo)
 	checkErr(err)
 	// defer DB.Close()
 }

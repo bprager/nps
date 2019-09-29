@@ -32,13 +32,21 @@ type User struct {
 func (r *queryResolver) AllUsers(ctx context.Context, limit int, offset int) (*UsersResult, error) {
 
 	query := `
-		SELECT id, first_name, last_name, nick_name, orgs, tags, categories, count(*)
-		FROM users
-	`
-	if limit != 0 {
-		query += ` LIMIT ? OFFSET ?`
-	}
-
+	SELECT 
+( SELECT count(*) FROM users ) AS totalCount,
+users.id AS userID, users.email, users.first_name AS firstName, users.last_name AS lastName, users.nick_name AS nickName,
+tags.id AS tagID, tags.name AS tagName, tags."attribute", tags."number", tags."timestamp",
+orgs."id" AS orgID, orgs."name" AS orgName,
+categories."id" AS catID, categories."name" AS category_name, categories.parent
+FROM users 
+LEFT OUTER JOIN user_tag_idx AS tidx ON tidx."user" = users.id
+LEFT OUTER JOIN tags ON tidx.tag = tags.id
+LEFT OUTER JOIN user_org_idx AS oidx ON oidx."user" = users.id
+LEFT OUTER JOIN orgs ON oidx.org = orgs.id
+LEFT OUTER JOIN user_category_idx AS cidx ON cidx."user" = users.id
+LEFT OUTER JOIN categories ON cidx.category = categories.id
+WHERE users.id IN (SELECT users.id FROM users LIMIT ? OFFSET ?)
+`
 	rows, err := DB.Queryx(query, limit, offset)
 	if err != nil {
 		log.Fatalln(err)
@@ -63,7 +71,7 @@ func (r *queryResolver) AllUsers(ctx context.Context, limit int, offset int) (*U
 		if err != nil {
 			log.Fatalln(err)
 		}
-		// TODO: skip duplicate array elements
+		// TODO: optimize looping
 		// Get tags, orgs and categories if there are any
 		if o.Valid || t.Valid || c.Valid {
 			query := `

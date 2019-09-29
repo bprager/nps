@@ -20,7 +20,6 @@ func TestShouldReturnAllTags(t *testing.T) {
 
 	// Switch to mock db
 	DB = sqlx.NewDb(db, "sqlMock")
-
 	// Here we are creating rows in our mocked database.
 	rows := sqlmock.NewRows([]string{"id", "name", "attribute", "number", "timestamp", "count"}).
 		AddRow(1, "male", nil, nil, nil, 3).
@@ -51,12 +50,15 @@ func TestShouldReturnAllUsers(t *testing.T) {
 	DB = sqlx.NewDb(db, "sqlMock")
 
 	// Here we are creating rows in our mocked database.
-	rows := sqlmock.NewRows([]string{"id", "email", "first_name", "last_name", "nick_name", "orgs", "tags", "categories", "count"}).
-		AddRow(1, "first@email", "First1", "Last1", "Nick1", 1, 2, 3, 3).
-		AddRow(2, "second@email", nil, nil, nil, nil, nil, nil, 3).
-		AddRow(2, nil, "First3", "Last3", "Nick3", nil, nil, nil, 3)
+	rows := sqlmock.NewRows([]string{"totalcount",
+		"userid", "email", "firstname", "lastname", "nickname",
+		"tagid", "tagname", "attribute", "number", "timestamp",
+		"orgid", "orgname", "catid", "catname", "parent"}).
+		AddRow(2, 1, "bernd@prager.ws", "Bernd", "Prager", nil, 2, "language", "German", nil, nil, 1, "Home", 6, "Male", 1).
+		AddRow(2, 1, "bernd@prager.ws", "Bernd", "Prager", nil, 3, "creative", nil, nil, nil, 1, "Home", 6, "Male", 1).
+		AddRow(2, 2, "tene@prager.ws", "Tené", "Closson-Prager", nil, 2, "language", "English", nil, nil, 1, "Home", 5, "Female", 1).
+		AddRow(2, 2, "tene@prager.ws", "Tené", "Closson-Prager", nil, 3, "creative", nil, nil, nil, 1, "Home", 5, "Female", 1)
 
-		// This is most important part in our test. Here, literally, we are altering SQL query from
 		// MenuByNameAndLanguage function and replacing result with our expected result.
 	mock.ExpectQuery("^SELECT (.+) FROM users.*").
 		WillReturnRows(rows)
