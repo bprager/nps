@@ -15,13 +15,13 @@ require (
 	github.com/jackc/pgx v3.6.0+incompatible
 	github.com/jmoiron/sqlx v1.2.0
 	github.com/joho/godotenv v1.3.0
-	github.com/lib/pq v1.2.0
+	github.com/lib/pq v1.2.0 // indirect
 	github.com/mattn/go-sqlite3 v1.11.0 // indirect
 	github.com/mitchellh/mapstructure v1.1.2 // indirect
 	github.com/shopspring/decimal v0.0.0-20190905144223-a36b5d85f337 // indirect
 	github.com/stretchr/testify v1.4.0 // indirect
 	github.com/vektah/gqlparser v1.1.2
-	golang.org/x/crypto v0.0.0-20190927123631-a832865fa7ad // indirect
+	golang.org/x/crypto v0.1.0 // indirect
 	google.golang.org/appengine v1.6.4 // indirect
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
 )
